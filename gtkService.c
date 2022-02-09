@@ -39,24 +39,40 @@ void refreshLoadingBerFrame(GtkWidget *loadingBar) {
     gtk_image_set_from_file(GTK_IMAGE(loadingBar),"image/loading_bar.png");
     pixbuf = gtk_image_get_pixbuf (GTK_IMAGE(loadingBar));
     pixbuf = gdk_pixbuf_scale_simple(pixbuf, progress, 45, 
-                GDK_INTERP_BILINEAR);
+                GDK_INTERP_NEAREST);
 
     gtk_image_set_from_pixbuf(GTK_IMAGE(loadingBar), pixbuf);
 }
 
-void loadingCallback(GtkWidget *loadingBar, gpointer data)
+gboolean progressLoadingBar(gpointer data)
 {   
     progress++;
-    refreshLoadingBerFrame(loadingBar);
-    return progress < 797;
+    refreshLoadingBerFrame(GTK_WIDGET(data));
+    gtk_widget_show(GTK_WIDGET(data));
+    gtk_widget_show(GTK_WIDGET(widget.mask));
+    if(progress < 922) return TRUE;
+    else {
+        gtk_widget_hide(GTK_WIDGET(data));
+        gtk_widget_hide(GTK_WIDGET(widget.mask));
+        return FALSE;
+    }
+    
 }
 
-void startCallback(GtkWidget* loading_bar, gpointer data){
-    progress = 1;
-    g_timeout_add(160, loadingCallback, loading_bar);
+void loadingCallback(GtkWidget* loading_bar){
+    progress = 10;
+    printf("\nLoading\n");
+    g_timeout_add(5, progressLoadingBar, loading_bar);
+    
 }
 
 void* run(void* data) {
+
+
+    Widget *widget = (Widget*)(data);
+
+    
+
     gtk_init(NULL, NULL);
     start = 0;
     progress = 1;
@@ -69,17 +85,14 @@ void* run(void* data) {
     GtkWidget *home_fixed = gtk_fixed_new();
 	gtk_container_add(GTK_CONTAINER(home),home_fixed);
 
-    GtkWidget * home_background = gtk_image_new_from_file("image/1.png");
-	gtk_fixed_put(GTK_FIXED(home_fixed), home_background, 0, 0);
+    widget->home_background = gtk_image_new_from_file("image/1.png");
+	gtk_fixed_put(GTK_FIXED(home_fixed), widget->home_background, 0, 0);
 
-    GtkWidget * mask = gtk_image_new_from_file("image/mask.png");
-	gtk_fixed_put(GTK_FIXED(home_fixed), mask, 0, 0);
+    widget->mask = gtk_image_new_from_file("image/loading_mask.png");
+	gtk_fixed_put(GTK_FIXED(home_fixed), widget->mask, 0, 0);
 
-    GtkWidget *loading_card = gtk_image_new_from_file("image/loading_card.png");
-	gtk_fixed_put(GTK_FIXED(home_fixed), loading_card, 102, 1135);
-
-    GtkWidget * loading_bar = gtk_image_new_from_file("image/loading_bar.png");
-    gtk_fixed_put(GTK_FIXED(home_fixed), loading_bar, 205, 1205);
+    widget->loading_bar = gtk_image_new_from_file("image/loading_bar.png");
+    gtk_fixed_put(GTK_FIXED(home_fixed), widget->loading_bar, 143, 1205);
 
     g_signal_new("loading",
              G_TYPE_OBJECT, G_SIGNAL_RUN_FIRST,
@@ -87,20 +100,17 @@ void* run(void* data) {
              g_cclosure_marshal_VOID__POINTER,
              G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-    g_signal_new("start",
-             G_TYPE_OBJECT, G_SIGNAL_RUN_FIRST,
-             0, NULL, NULL,
-             g_cclosure_marshal_VOID__POINTER,
-             G_TYPE_NONE, 1, G_TYPE_POINTER);
-    
+    g_signal_connect(G_OBJECT(widget->loading_bar), "loading", G_CALLBACK(loadingCallback), NULL);
 
-    g_signal_connect(G_OBJECT(loading_bar), "loading", G_CALLBACK(startCallback), NULL);
-    g_signal_emit_by_name(GTK_WIDGET(loading_bar), "loading");
     gtk_widget_show_all(home);
     gtk_main();
 
     return (int*) data;
 }
 
+
+void startani(GtkWidget *loading_bar) {
+    g_signal_emit_by_name(GTK_WIDGET(loading_bar), "loading");
+}
 
 

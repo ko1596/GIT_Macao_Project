@@ -13,6 +13,15 @@ typedef struct _gbutton {
     double opacity;
 } gbutton;
 
+typedef struct _widget {
+    GtkWidget *home_fixed;
+    GtkWidget *home_background;
+    GtkWidget *mask;
+    GtkWidget *loading_bar;
+} Widget;
+
+Widget widget;
+
 pthread_t gtkThread;
 
 int progress;
@@ -24,12 +33,12 @@ gint findMaxArrayIndex(guint16[], gint);
 
 void refreshLoadingBerFrame(GtkWidget *);
 
-void loadingCallback(GtkWidget*, gpointer);
+gboolean progressLoadingBar(gpointer);
 
-void startCallback(GtkWidget*, gpointer);
+void loadingCallback(GtkWidget*);
 
 void* run(void*);
 
-void startani();
+void startani(GtkWidget *);
 
 #endif
