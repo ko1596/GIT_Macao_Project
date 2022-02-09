@@ -101,6 +101,8 @@ void* run(void* data) {
         gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].parkNumLabel, (i/4) * 600 + 57, (i%4) * 270 + 29);
     }
 
+    updateParkingData();
+
     widget->mask = gtk_image_new_from_file("image/loading_mask.png");
 	gtk_fixed_put(GTK_FIXED(home_fixed), widget->mask, 0, 0);
 
@@ -115,15 +117,12 @@ void* run(void* data) {
 
     g_signal_connect(G_OBJECT(widget->loading_bar), "loading", G_CALLBACK(loadingCallback), NULL);
 
-    // GtkWidget *Timelabel = gtk_label_new (NULL);
-    // gtk_fixed_put(GTK_FIXED(home_fixed), Timelabel, 350, 1500);
-    // gtk_label_set_markup(GTK_LABEL(Timelabel), "<span font_desc='45' color='#ffffff' weight='bold'>aaaa</span>");
-
+    g_timeout_add(60000, counter, NULL);
     
-
-    g_timeout_add(1000, counter, NULL);
+    g_signal_emit_by_name(GTK_WIDGET(widget->loading_bar), "loading");
 
     gtk_widget_show_all(home);
+    updateParkingData();
     
     gtk_main();
 
@@ -133,24 +132,58 @@ void* run(void* data) {
 
 void startani(GtkWidget *loading_bar) {
     g_signal_emit_by_name(GTK_WIDGET(loading_bar), "loading");
-    time_t start_t, end_t;
-
-    
 }
 
 gboolean counter(gpointer data) {
-    int day,hour,minute,second;
-    double elapsed_time; 
-    time_t start = time(NULL);
-    
-    elapsed_time = difftime( finish, start );
-
-    day = (int)(elapsed_time/60/60/24); 
-    hour = (int)(elapsed_time/60/60-24*day); 
-    minute = (int)(elapsed_time/60-60*hour-60*24*day); 
-    second = (int)(elapsed_time-60*minute-60*60*hour-60*60*24*day); 
-
+    updateParkingData();
     return TRUE;
 }
 
+void updateParkingData() {
+    for (int i = 0; i < 8; i++) {
+        switch (parkingData[i].parkingStatus)
+        {
+        case PARKING_STATUS_EMPTY:
+            gtk_widget_hide(parkingData[i].image);
+            gtk_widget_hide(parkingData[i].timeLabel);
+            break;
 
+        case PARKING_STATUS_DEADLINE:
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/deadline.png");
+            gtk_widget_show(parkingData[i].image);
+            showDeadline(parkingData[i]);
+            gtk_widget_show(parkingData[i].timeLabel);
+            break;
+
+        case PARKING_STATUS_EXPIRED:
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/expired.png");
+            gtk_widget_show(parkingData[i].image);
+            gtk_widget_hide(parkingData[i].timeLabel);
+            break;
+
+        case PARKING_STATUS_PAYMENT:
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/payment.png");
+            gtk_widget_show(parkingData[i].image);
+            gtk_widget_hide(parkingData[i].timeLabel);
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+
+void showDeadline(ParkingData data) {
+    int day,hour,minute,second;
+    double elapsed_time; 
+    time_t start = time(NULL);
+    elapsed_time = difftime( data.deadline, start );
+
+    day = (int)(elapsed_time/60/60/24); 
+    hour = (int)(elapsed_time/60/60-24*day); 
+    minute = (int)(elapsed_time/60-60*hour-60*24*day);
+
+    gchar *text_time = g_strdup_printf(\
+        "<span font_desc='55' color='#DE9C18'>%02d : %02d</span>", hour, minute);
+    gtk_label_set_markup(GTK_LABEL(data.timeLabel), text_time);
+}

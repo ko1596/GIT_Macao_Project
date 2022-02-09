@@ -77,6 +77,10 @@ void* run(void*);
 
 void startani(GtkWidget *);
 
+void updateParkingData();
+
 gboolean counter(gpointer);
+
+void showDeadline(ParkingData);
 
 #endif
