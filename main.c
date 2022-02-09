@@ -4,6 +4,13 @@ int main()
 {
     int buf;
     
+    struct tm *p;
+
+    finish = time(NULL);
+    p = localtime(&finish);
+    p->tm_hour+=2;
+    finish = mktime(p); 
+
     pthread_create(&gtkThread, NULL, run, &widget);
     pthread_create(&serialThread, NULL, UartLoop, NULL);
     

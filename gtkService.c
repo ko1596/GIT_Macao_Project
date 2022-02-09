@@ -88,6 +88,19 @@ void* run(void* data) {
     widget->home_background = gtk_image_new_from_file("image/1.png");
 	gtk_fixed_put(GTK_FIXED(home_fixed), widget->home_background, 0, 0);
 
+    for(int i = 0; i < 8; i++) {
+        parkingData[i].image = gtk_image_new_from_file("image/deadline.png");
+        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].image, (i/4) * 600 + 240, (i%4) * 270 + 60);
+        parkingData[i].timeLabel = gtk_label_new(NULL);
+        gtk_label_set_markup(GTK_LABEL(parkingData[i].timeLabel), "<span font_desc='55' color='#DE9C18'>00 : 00</span>");
+        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].timeLabel, (i/4) * 600 + 257, (i%4) * 270 + 155);
+        parkingData[i].parkNumLabel = gtk_label_new(NULL);
+        gchar *text_time = g_strdup_printf(\
+        "<span font_desc='100' color='#16D2BA'>%02d</span>", i);
+        gtk_label_set_markup(GTK_LABEL(parkingData[i].parkNumLabel), text_time);
+        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].parkNumLabel, (i/4) * 600 + 57, (i%4) * 270 + 29);
+    }
+
     widget->mask = gtk_image_new_from_file("image/loading_mask.png");
 	gtk_fixed_put(GTK_FIXED(home_fixed), widget->mask, 0, 0);
 
@@ -102,7 +115,16 @@ void* run(void* data) {
 
     g_signal_connect(G_OBJECT(widget->loading_bar), "loading", G_CALLBACK(loadingCallback), NULL);
 
+    // GtkWidget *Timelabel = gtk_label_new (NULL);
+    // gtk_fixed_put(GTK_FIXED(home_fixed), Timelabel, 350, 1500);
+    // gtk_label_set_markup(GTK_LABEL(Timelabel), "<span font_desc='45' color='#ffffff' weight='bold'>aaaa</span>");
+
+    
+
+    g_timeout_add(1000, counter, NULL);
+
     gtk_widget_show_all(home);
+    
     gtk_main();
 
     return (int*) data;
@@ -111,6 +133,24 @@ void* run(void* data) {
 
 void startani(GtkWidget *loading_bar) {
     g_signal_emit_by_name(GTK_WIDGET(loading_bar), "loading");
+    time_t start_t, end_t;
+
+    
+}
+
+gboolean counter(gpointer data) {
+    int day,hour,minute,second;
+    double elapsed_time; 
+    time_t start = time(NULL);
+    
+    elapsed_time = difftime( finish, start );
+
+    day = (int)(elapsed_time/60/60/24); 
+    hour = (int)(elapsed_time/60/60-24*day); 
+    minute = (int)(elapsed_time/60-60*hour-60*24*day); 
+    second = (int)(elapsed_time-60*minute-60*60*hour-60*60*24*day); 
+
+    return TRUE;
 }
 
 

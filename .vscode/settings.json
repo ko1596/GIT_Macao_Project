@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "gtk.h": "c",
-        "gdkkeysyms.h": "c"
+        "gdkkeysyms.h": "c",
+        "time.h": "c"
     }
 }
