@@ -54,6 +54,7 @@ gboolean progressLoadingBar(gpointer data)
     else {
         gtk_widget_hide(GTK_WIDGET(data));
         gtk_widget_hide(GTK_WIDGET(widget.mask));
+        g_timeout_add(16, courseAnimation, widget.home_fixed);
         return FALSE;
     }
     
@@ -67,14 +68,11 @@ void loadingCallback(GtkWidget* loading_bar){
 }
 
 void* run(void* data) {
-
-
+    presstime = 0;
+    lastStatus = 0;
     Widget *widget = (Widget*)(data);
 
-    
-
     gtk_init(NULL, NULL);
-    start = 0;
     progress = 1;
 
     // GTK_WINDOW_POPUP         show on the top screen without windows
@@ -83,6 +81,7 @@ void* run(void* data) {
     gtk_window_fullscreen(GTK_WINDOW(home));
 
     GtkWidget *home_fixed = gtk_fixed_new();
+    widget->home_fixed = home_fixed;
 	gtk_container_add(GTK_CONTAINER(home),home_fixed);
 
     widget->home_background = gtk_image_new_from_file("image/1.png");
@@ -90,18 +89,31 @@ void* run(void* data) {
 
     for(int i = 0; i < 8; i++) {
         parkingData[i].image = gtk_image_new_from_file("image/deadline.png");
-        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].image, (i/4) * 600 + 240, (i%4) * 270 + 60);
+        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].image
+                , (i/4) * 600 + 240, (i%4) * 270 + 60);
+
         parkingData[i].timeLabel = gtk_label_new(NULL);
-        gtk_label_set_markup(GTK_LABEL(parkingData[i].timeLabel), "<span font_desc='55' color='#DE9C18'>00 : 00</span>");
-        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].timeLabel, (i/4) * 600 + 257, (i%4) * 270 + 155);
+        gtk_label_set_markup(GTK_LABEL(parkingData[i].timeLabel)
+                , "<span font_desc='55' color='#DE9C18'>00 : 00</span>");
+        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].timeLabel
+                , (i/4) * 600 + 257, (i%4) * 270 + 155);
+
         parkingData[i].parkNumLabel = gtk_label_new(NULL);
         gchar *text_time = g_strdup_printf(\
         "<span font_desc='100' color='#16D2BA'>%02d</span>", i);
         gtk_label_set_markup(GTK_LABEL(parkingData[i].parkNumLabel), text_time);
-        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].parkNumLabel, (i/4) * 600 + 57, (i%4) * 270 + 29);
+        gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].parkNumLabel
+                , (i/4) * 600 + 57, (i%4) * 270 + 29);
     }
 
     updateParkingData();
+
+    widget->selectbutton.image = gtk_image_new_from_file("image/select.png");
+    gtk_fixed_put(GTK_FIXED(home_fixed), widget->selectbutton.image, 0, 0);
+
+    widget->hoverAnimation.image = gtk_image_new_from_file("image/hover.png");
+    gtk_fixed_put(GTK_FIXED(home_fixed), widget->hoverAnimation.image, 0, 0);
+    
 
     widget->mask = gtk_image_new_from_file("image/loading_mask.png");
 	gtk_fixed_put(GTK_FIXED(home_fixed), widget->mask, 0, 0);
@@ -115,15 +127,29 @@ void* run(void* data) {
              g_cclosure_marshal_VOID__POINTER,
              G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-    g_signal_connect(G_OBJECT(widget->loading_bar), "loading", G_CALLBACK(loadingCallback), NULL);
+    g_signal_connect(G_OBJECT(widget->loading_bar)
+                , "loading", G_CALLBACK(loadingCallback)
+                , NULL);
 
     g_timeout_add(60000, counter, NULL);
     
     g_signal_emit_by_name(GTK_WIDGET(widget->loading_bar), "loading");
 
     gtk_widget_show_all(home);
+
+
     updateParkingData();
-    
+
+
+    widget->selectbutton.opacity = 0;
+    gtk_widget_set_opacity(widget->selectbutton.image
+                        , widget->selectbutton.opacity);
+                        
+    widget->hoverAnimation.opacity = 0;
+    gtk_widget_set_opacity(widget->hoverAnimation.image
+                        , widget->hoverAnimation.opacity);
+
+
     gtk_main();
 
     return (int*) data;
@@ -174,7 +200,7 @@ void updateParkingData() {
 }
 
 void showDeadline(ParkingData data) {
-    int day,hour,minute,second;
+    int day,hour,minute;
     double elapsed_time; 
     time_t start = time(NULL);
     elapsed_time = difftime( data.deadline, start );
@@ -186,4 +212,53 @@ void showDeadline(ParkingData data) {
     gchar *text_time = g_strdup_printf(\
         "<span font_desc='55' color='#DE9C18'>%02d : %02d</span>", hour, minute);
     gtk_label_set_markup(GTK_LABEL(data.timeLabel), text_time);
+}
+
+gboolean courseAnimation(gpointer home_fixed) {
+    
+    gint maxIndex = findMaxArrayIndex(block, 24);
+    int status = 0;
+    int selectBlockX = ((maxIndex/2) % 2) * 600 + 20;
+    int selectBlockY = ((maxIndex/2) / 2) * 270 + 30;
+
+    if (SELECT_BLOCK(block[maxIndex])) {
+        status = maxIndex/2;
+    }else {
+        status = -1;
+    }
+
+
+    if(status > -1 && status < 8) {
+        if (status == lastStatus)
+            presstime++;
+        else {
+            presstime = 0;
+            gtk_fixed_move(GTK_FIXED(home_fixed), widget.selectbutton.image
+                        , selectBlockX, selectBlockY);
+
+            gtk_fixed_move(GTK_FIXED(home_fixed), widget.hoverAnimation.image
+                        , selectBlockX, selectBlockY);
+        }
+    }
+
+    if (presstime > 80) status = -2;
+
+    hoverAnimation(&widget.selectbutton, status);
+    hoverAnimation(&widget.hoverAnimation, status);
+    // printf("status [%d]\n", status);
+    lastStatus = status;
+
+    return TRUE;
+}
+
+void hoverAnimation(gbutton *opacityWidget, int status) {
+    if(status > -1 && status < 8 && opacityWidget->opacity < 1) {
+        opacityWidget->opacity += 0.05;
+        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
+    }
+    else if(status < 0 && opacityWidget->opacity > 0) {
+        opacityWidget->opacity -= 0.05;
+        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
+    }
+    // printf("Opacity: %f\n", opacityWidget->opacity);
 }

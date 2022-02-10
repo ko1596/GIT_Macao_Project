@@ -39,6 +39,8 @@ typedef struct _widget {
     GtkWidget *home_background;
     GtkWidget *mask;
     GtkWidget *loading_bar;
+    gbutton selectbutton;
+    gbutton hoverAnimation;
 } Widget;
 
 typedef struct _ParkingData {
@@ -58,10 +60,8 @@ ParkingData parkingData[8];
 pthread_t gtkThread;
 
 int progress;
-int start;
-
-time_t finish;
-
+int presstime;
+int lastStatus;
 
 gboolean settime(gpointer);
 
@@ -82,5 +82,9 @@ void updateParkingData();
 gboolean counter(gpointer);
 
 void showDeadline(ParkingData);
+
+gboolean courseAnimation(gpointer);
+
+void hoverAnimation(gbutton*, int);
 
 #endif
