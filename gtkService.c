@@ -34,11 +34,11 @@ gint findMaxArrayIndex(guint16 array[], gint array_size) {
     return maxIndex;
 }
 
-void refreshLoadingBerFrame(GtkWidget *loadingBar) {
+void refreshLoadingBerFrame(GtkWidget *loadingBar, int weight ,int height) {
     GdkPixbuf *pixbuf;
-    gtk_image_set_from_file(GTK_IMAGE(loadingBar),"image/loading_bar.png");
+    
     pixbuf = gtk_image_get_pixbuf (GTK_IMAGE(loadingBar));
-    pixbuf = gdk_pixbuf_scale_simple(pixbuf, progress, 45, 
+    pixbuf = gdk_pixbuf_scale_simple(pixbuf, weight, height, 
                 GDK_INTERP_NEAREST);
 
     gtk_image_set_from_pixbuf(GTK_IMAGE(loadingBar), pixbuf);
@@ -47,7 +47,8 @@ void refreshLoadingBerFrame(GtkWidget *loadingBar) {
 gboolean progressLoadingBar(gpointer data)
 {   
     progress++;
-    refreshLoadingBerFrame(GTK_WIDGET(data));
+    gtk_image_set_from_file(GTK_IMAGE(data),"image/loading_bar.png");
+    refreshLoadingBerFrame(GTK_WIDGET(data), progress,45);
     gtk_widget_show(GTK_WIDGET(data));
     gtk_widget_show(GTK_WIDGET(widget.mask));
     if(progress < 922) return TRUE;
@@ -87,6 +88,9 @@ void* run(void* data) {
     widget->home_background = gtk_image_new_from_file("image/1.png");
 	gtk_fixed_put(GTK_FIXED(home_fixed), widget->home_background, 0, 0);
 
+    widget->hoverAnimation.image = gtk_image_new_from_file("image/hover.png");
+    gtk_fixed_put(GTK_FIXED(home_fixed), widget->hoverAnimation.image, 0, 0);
+
     for(int i = 0; i < 8; i++) {
         parkingData[i].image = gtk_image_new_from_file("image/deadline.png");
         gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].image
@@ -111,8 +115,7 @@ void* run(void* data) {
     widget->selectbutton.image = gtk_image_new_from_file("image/select.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), widget->selectbutton.image, 0, 0);
 
-    widget->hoverAnimation.image = gtk_image_new_from_file("image/hover.png");
-    gtk_fixed_put(GTK_FIXED(home_fixed), widget->hoverAnimation.image, 0, 0);
+    
     
 
     widget->mask = gtk_image_new_from_file("image/loading_mask.png");
@@ -230,9 +233,13 @@ gboolean courseAnimation(gpointer home_fixed) {
 
     if(status > -1 && status < 8) {
         if (status == lastStatus)
+        {
             presstime++;
+            refreshLoadingBerFrame(widget.hoverAnimation.image, (int)(568 * (float)presstime/80), 239);
+        }
+            
         else {
-            presstime = 0;
+            presstime = 1;
             gtk_fixed_move(GTK_FIXED(home_fixed), widget.selectbutton.image
                         , selectBlockX, selectBlockY);
 
@@ -241,11 +248,14 @@ gboolean courseAnimation(gpointer home_fixed) {
         }
     }
 
-    if (presstime > 80) status = -2;
+    if (presstime > 80) {
+        status = -2;
+        return FALSE;
+    }
 
     hoverAnimation(&widget.selectbutton, status);
     hoverAnimation(&widget.hoverAnimation, status);
-    // printf("status [%d]\n", status);
+    printf("status [%d]\n", status);
     lastStatus = status;
 
     return TRUE;
@@ -256,7 +266,7 @@ void hoverAnimation(gbutton *opacityWidget, int status) {
         opacityWidget->opacity += 0.05;
         gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
     }
-    else if(status < 0 && opacityWidget->opacity > 0) {
+    else if((status < 0 || status > 7) && opacityWidget->opacity > 0) {
         opacityWidget->opacity -= 0.05;
         gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
     }

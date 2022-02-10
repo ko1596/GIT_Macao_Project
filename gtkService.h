@@ -67,7 +67,7 @@ gboolean settime(gpointer);
 
 gint findMaxArrayIndex(guint16[], gint);
 
-void refreshLoadingBerFrame(GtkWidget *);
+void refreshLoadingBerFrame(GtkWidget *, int, int);
 
 gboolean progressLoadingBar(gpointer);
 
