@@ -48,7 +48,7 @@ void refreshLoadingBerFrame(GtkWidget *loadingBar, int weight ,int height) {
 gboolean progressLoadingBar(gpointer data)
 {   
     progress++;
-    gtk_image_set_from_file(GTK_IMAGE(data),"/home/root/image/loading_bar.png");
+    gtk_image_set_from_file(GTK_IMAGE(data),"/home/root/display_MO/image/loading_bar.png");
     refreshLoadingBerFrame(GTK_WIDGET(data), progress,45);
     gtk_widget_show(GTK_WIDGET(data));
     gtk_widget_show(GTK_WIDGET(widget.mask));
@@ -90,14 +90,14 @@ void* run(void* data) {
     widget->home_fixed = gtk_fixed_new();
 	gtk_container_add(GTK_CONTAINER(home),widget->home_fixed);
 
-    widget->home_background = gtk_image_new_from_file("/home/root/image/1.png");
+    widget->home_background = gtk_image_new_from_file("/home/root/display_MO/image/1.png");
 	gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->home_background, 0, 0);
 
-    widget->hoverAnimation.image = gtk_image_new_from_file("/home/root/image/hover.png");
+    widget->hoverAnimation.image = gtk_image_new_from_file("/home/root/display_MO/image/hover.png");
     gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->hoverAnimation.image, 0, 0);
 
     for(int i = 0; i < 8; i++) {
-        parkingData[i].image = gtk_image_new_from_file("/home/root/image/deadline.png");
+        parkingData[i].image = gtk_image_new_from_file("/home/root/display_MO/image/deadline.png");
         gtk_fixed_put(GTK_FIXED(widget->home_fixed), parkingData[i].image
                 , (i/4) * 600 + 240, (i%4) * 270 + 60);
 
@@ -117,16 +117,16 @@ void* run(void* data) {
 
     updateParkingData();
 
-    widget->selectbutton.image = gtk_image_new_from_file("/home/root/image/select.png");
+    widget->selectbutton.image = gtk_image_new_from_file("/home/root/display_MO/image/select.png");
     gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->selectbutton.image, 0, 0);
 
     
     
 
-    widget->mask = gtk_image_new_from_file("/home/root/image/loading_mask.png");
+    widget->mask = gtk_image_new_from_file("/home/root/display_MO/image/loading_mask.png");
 	gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->mask, 0, 0);
 
-    widget->loading_bar = gtk_image_new_from_file("/home/root/image/loading_bar.png");
+    widget->loading_bar = gtk_image_new_from_file("/home/root/display_MO/image/loading_bar.png");
     gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->loading_bar, 143, 1205);
 
     g_signal_new("loading",
@@ -141,9 +141,9 @@ void* run(void* data) {
 
     g_timeout_add(60000, counter, NULL);
     
-    // g_signal_emit_by_name(GTK_WIDGET(widget->loading_bar), "loading");
+    g_signal_emit_by_name(GTK_WIDGET(widget->loading_bar), "loading");
 
-    // gtk_widget_show_all(home);
+    gtk_widget_show_all(home);
 
 
     updateParkingData();
@@ -169,14 +169,14 @@ void* run(void* data) {
     widget->select_fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(selectTimewindwos),widget->select_fixed);
 
-    widget->select_background = gtk_image_new_from_file("/home/root/image/2.png");
+    widget->select_background = gtk_image_new_from_file("/home/root/display_MO/image/2.png");
     gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_background, 0, 0);
 
-    widget->select_time = gtk_image_new_from_file("/home/root/image/select_time.png");
+    widget->select_time = gtk_image_new_from_file("/home/root/display_MO/image/select_time.png");
     gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_time, 2, 784);
-    buf = gdk_pixbuf_new_from_file("/home/root/image/select_time.png", NULL);
+    buf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_time.png", NULL);
 
-    widget->select_time2 = gtk_image_new_from_file("/home/root/image/select_time.png");
+    widget->select_time2 = gtk_image_new_from_file("/home/root/display_MO/image/select_time.png");
     gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_time2, 2, 784);
 
     widget->select_label = gtk_label_new(NULL);
@@ -184,9 +184,13 @@ void* run(void* data) {
                 , "<span font_desc='65' color='#FFFFFF' weight='bold'>00 : 00</span>");
     gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_label, 80, 590);
 
-    g_timeout_add(5, selectTimeAnimation, NULL);
+    widget->select_hover = gtk_image_new_from_file("/home/root/display_MO/image/select_time_hover.png");
+    gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_hover, 2, 784);
+    select_hover_buf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_time_hover.png", NULL);
 
-    gtk_widget_show_all(selectTimewindwos);  
+    // g_timeout_add(5, selectTimeAnimation, NULL);
+
+    // gtk_widget_show_all(selectTimewindwos);  
     gtk_widget_hide(widget->select_time2);
 
     gtk_main();
@@ -214,20 +218,20 @@ void updateParkingData() {
             break;
 
         case PARKING_STATUS_DEADLINE:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/image/deadline.png");
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/display_MO/image/deadline.png");
             gtk_widget_show(parkingData[i].image);
             showDeadline(parkingData[i]);
             gtk_widget_show(parkingData[i].timeLabel);
             break;
 
         case PARKING_STATUS_EXPIRED:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/image/expired.png");
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/display_MO/image/expired.png");
             gtk_widget_show(parkingData[i].image);
             gtk_widget_hide(parkingData[i].timeLabel);
             break;
 
         case PARKING_STATUS_PAYMENT:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/image/payment.png");
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/display_MO/image/payment.png");
             gtk_widget_show(parkingData[i].image);
             gtk_widget_hide(parkingData[i].timeLabel);
             break;
@@ -321,21 +325,34 @@ gboolean selectTimeAnimation(gpointer data) {
     gint maxIndex = findMaxArrayIndex(block, 24);
     int status = 0;
     
-    if (SELECT_BLOCK(block[maxIndex])) status = maxIndex;
-
+    if (SELECT_BLOCK(block[maxIndex])) {
+        status = maxIndex;
+        if (status < 12 || status > 19)
+            presstime = 0;
+        else {
+            presstime++;
+        }
+            
+        printf("presstime[%d]\n", presstime);
+    }
+    else {
+        status = -1;
+        presstime = 0;
+    }
+    
     if (status > 11 && status < 20 && lastStatus != status){
         goal_dist = (int)(1192*(float) (((status-12)%4)+1)/4);
         if(status >11 && status <16) {
             gtk_fixed_move(GTK_FIXED(widget.select_fixed), widget.select_time, 2, 784);
             gtk_widget_hide(widget.select_time2);
-        }  
+        }
         else{
             gtk_fixed_move(GTK_FIXED(widget.select_fixed), widget.select_time, 2, 1110);
             gtk_widget_show(widget.select_time2);
         }
         label_Y = !(status >11 && status <16);
         label_time = status;
-        
+        presstime = 0;
     }
 
     //如果離目標太遠直接拉近到100的距離
@@ -361,27 +378,36 @@ gboolean selectTimeAnimation(gpointer data) {
         gtk_label_set_markup(GTK_LABEL(widget.select_label), text_time);
         gtk_fixed_move(GTK_FIXED(widget.select_fixed), widget.select_label
                         , select_time_weight-280, 890 + label_Y*316);
-        
-        
+        gtk_fixed_move(GTK_FIXED(widget.select_fixed), widget.select_hover
+                        , select_time_weight-280, 784 + label_Y*327);
     }
 
-    // if (status > 11 && status < 20){
-    //     if (lastStatus != status || 
-    //         select_time_weight < goal_dist - 10 || 
-    //         select_time_weight > goal_dist + 10) {
-
-    //         gchar *text_time = g_strdup_printf(\
-    //             "<span font_desc='65' color='#FFFFFF' weight='bold'>%02d: %02d</span>"
-    //             , ((status+1)/2)-6, ((status+1)%2)*30);
-    //         gtk_label_set_markup(GTK_LABEL(widget.select_label), text_time);
-    //         gtk_fixed_move(GTK_FIXED(widget.select_fixed), widget.select_label
-    //                         , select_time_weight-280, 890 + ((status-12)/4)*316);
-    //     }
-        
+    // if (presstime == 300) {
+    //     presstime = 0;
+    // }else if(presstime!=0) {
+    //     gtk_widget_show(widget.select_hover);
+    //     selectLoadingAnimation(widget.select_hover,298, (int)(330 * (float)presstime/300));
+    // }else{
+    //     gtk_widget_hide(widget.select_hover);
     // }
 
+    if (presstime == 300) {
+        presstime = 0;
+    }else if(presstime!=0) {
+        gtk_widget_show(widget.select_hover);
+        selectLoadingAnimation(widget.select_hover,(int)(298 * (float)presstime/300), 330);
+    }else{
+        gtk_widget_hide(widget.select_hover);
+    }
 
-        
+    // if (presstime == 300) {
+    //     presstime = 0;
+    //     gtk_widget_set_opacity(widget.select_hover, 0);
+    // }else if(presstime!=0) {
+    //     gtk_widget_set_opacity(widget.select_hover, (float)presstime/300);
+    // }else{
+    //     gtk_widget_set_opacity(widget.select_hover, 0);
+    // }
 
     lastStatus = status;
     
@@ -396,3 +422,12 @@ void selectHoverAnimation(GtkWidget * select, int weight ,int height) {
     g_object_unref(pixbuf);
     
 }
+
+void selectLoadingAnimation(GtkWidget * hover, int weight, int height) {
+    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple(select_hover_buf, weight, height, 
+                GDK_INTERP_NEAREST);
+
+    gtk_image_set_from_pixbuf(GTK_IMAGE(hover), pixbuf);
+    g_object_unref(pixbuf);
+}
+

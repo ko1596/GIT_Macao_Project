@@ -48,6 +48,7 @@ typedef struct _widget {
     GtkWidget *select_time;
     GtkWidget *select_time2;
     GtkWidget *select_label;
+    GtkWidget *select_hover;
 
 } Widget;
 
@@ -76,6 +77,7 @@ int goal_dist;
 int label_Y;
 int label_time;
 GdkPixbuf *buf;
+GdkPixbuf *select_hover_buf;
 
 gboolean settime(gpointer);
 
@@ -105,4 +107,5 @@ gboolean selectTimeAnimation(gpointer);
 
 void selectHoverAnimation(GtkWidget *, int, int);
 
+void selectLoadingAnimation(GtkWidget *, int, int);
 #endif
