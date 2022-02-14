@@ -382,15 +382,6 @@ gboolean selectTimeAnimation(gpointer data) {
                         , select_time_weight-280, 784 + label_Y*327);
     }
 
-    // if (presstime == 300) {
-    //     presstime = 0;
-    // }else if(presstime!=0) {
-    //     gtk_widget_show(widget.select_hover);
-    //     selectLoadingAnimation(widget.select_hover,298, (int)(330 * (float)presstime/300));
-    // }else{
-    //     gtk_widget_hide(widget.select_hover);
-    // }
-
     if (presstime == 300) {
         presstime = 0;
     }else if(presstime!=0) {
@@ -399,15 +390,6 @@ gboolean selectTimeAnimation(gpointer data) {
     }else{
         gtk_widget_hide(widget.select_hover);
     }
-
-    // if (presstime == 300) {
-    //     presstime = 0;
-    //     gtk_widget_set_opacity(widget.select_hover, 0);
-    // }else if(presstime!=0) {
-    //     gtk_widget_set_opacity(widget.select_hover, (float)presstime/300);
-    // }else{
-    //     gtk_widget_set_opacity(widget.select_hover, 0);
-    // }
 
     lastStatus = status;
     
