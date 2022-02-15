@@ -45,11 +45,9 @@ typedef struct _widget {
 
     GtkWidget *select_fixed;
     GtkWidget *select_background;
-    GtkWidget *select_time;
-    GtkWidget *select_time2;
-    GtkWidget *select_label;
-    GtkWidget *select_hover;
-
+    gbutton select_timer;
+    gbutton select_hover;
+    gbutton select_label;
 } Widget;
 
 typedef struct _ParkingData {
@@ -77,7 +75,6 @@ int goal_dist;
 int label_Y;
 int label_time;
 GdkPixbuf *buf;
-GdkPixbuf *select_hover_buf;
 
 gboolean settime(gpointer);
 
@@ -107,5 +104,5 @@ gboolean selectTimeAnimation(gpointer);
 
 void selectHoverAnimation(GtkWidget *, int, int);
 
-void selectLoadingAnimation(GtkWidget *, int, int);
+void selectHoverOpacityAnimation(gbutton *, int );
 #endif
