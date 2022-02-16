@@ -52,8 +52,9 @@ typedef struct _widget {
 
     GtkWidget *payment_fixed;
     GtkWidget *payment_background;
-    gbutton payment_hover_left;
-    gbutton payment_hover_right;
+    gbutton payment_hover;
+    gbutton payment_card;
+    gbutton payment_qrcode;
 } Widget;
 
 typedef struct _ParkingData {
@@ -77,6 +78,7 @@ int presstime;
 int lastStatus;
 
 GdkPixbuf *buf;
+GdkPixbuf *paymentbuf;
 
 gboolean settime(gpointer);
 
@@ -109,4 +111,8 @@ void selectHoverAnimation(GtkWidget *, int, int);
 void selectHoverOpacityAnimation(gbutton *, int );
 
 gboolean paymentAnimation(gpointer);
+
+void paymentHoverAnimation(GtkWidget *, int , int);
+
+void paymentOpacityAnimation(gbutton *,gbutton *, int);
 #endif

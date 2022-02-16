@@ -141,9 +141,9 @@ void* run(void* data) {
 
     g_timeout_add(60000, counter, NULL);
     
-    // g_signal_emit_by_name(GTK_WIDGET(widget->loading_bar), "loading");
+    g_signal_emit_by_name(GTK_WIDGET(widget->loading_bar), "loading");
 
-    // gtk_widget_show_all(home);
+    gtk_widget_show_all(home);
 
     updateParkingData();
 
@@ -182,6 +182,8 @@ void* run(void* data) {
     gtk_label_set_markup(GTK_LABEL(widget->select_label.image)
                 , "<span font_desc='65' color='#FFFFFF' weight='bold'>00:00</span>");
     gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_label.image, 50, 895);
+    widget->select_label.opacity = 0;
+    gtk_widget_set_opacity(widget->select_label.image, widget->select_label.opacity);
 
 
     // g_timeout_add(5, selectTimeAnimation, NULL);
@@ -203,15 +205,22 @@ void* run(void* data) {
     widget->payment_background = gtk_image_new_from_file("image/3.png");
     gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_background, 0, 0);
 
-    widget->payment_hover_left.image = gtk_image_new_from_file("image/qrcode.png");
-    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover_left.image, 0, 675);
+    widget->payment_hover.image = gtk_image_new_from_file("image/select_payment.png");
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover.image,0, 695);
+    paymentbuf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_payment.png", NULL);
 
-    widget->payment_hover_right.image = gtk_image_new_from_file("image/card.png");
-    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover_right.image, 600, 675);
+    widget->payment_qrcode.image = gtk_image_new_from_file("image/payment_qrcode.png");
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_qrcode.image,144, 734);
+    gtk_widget_set_opacity(widget->payment_qrcode.image, widget->payment_qrcode.opacity);
+    widget->payment_qrcode.opacity = 0;
 
+    widget->payment_card.image = gtk_image_new_from_file("image/payment_card.png");
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_card.image, 827,739);
+    widget->payment_card.opacity = 0;
+    gtk_widget_set_opacity(widget->payment_card.image, widget->payment_card.opacity);
 
-    g_timeout_add(5, paymentAnimation, NULL);
-    gtk_widget_show_all(paymentWindow);  
+    // g_timeout_add(25, paymentAnimation, NULL);
+    // gtk_widget_show_all(paymentWindow);  
 
     gtk_main();
 
@@ -398,6 +407,13 @@ gboolean selectTimeAnimation(gpointer data) {
         presstime = 0;
         widget.select_label.opacity = 0;
         widget.select_hover.opacity = 0;
+
+        gtk_widget_hide(selectTimewindwos);
+        gtk_widget_show_all(paymentWindow);  
+        g_timeout_add(25, paymentAnimation, NULL);
+        
+        printf("Go to page 3\n");
+        return FALSE;
     }
 
     selectHoverOpacityAnimation(&widget.select_hover , status);
@@ -445,23 +461,55 @@ gboolean paymentAnimation(gpointer data) {
         presstime = 0;
     }
 
-    if(presstime > 200) {
+    if (status != -1 && status%4 < 2 && status != lastStatus) {
+        gtk_fixed_move(GTK_FIXED(widget.payment_fixed), widget.payment_hover.image
+                        , 0, 695);
+    }else if(status != -1 && status%4 > 1 && status != lastStatus) {
+        gtk_fixed_move(GTK_FIXED(widget.payment_fixed), widget.payment_hover.image
+                        , 600, 695);
+    }
+
+    
+    if(presstime == 40 || status != lastStatus) {
+        paymentHoverAnimation(widget.payment_hover.image, 1,515);
         presstime = 0;
-        gtk_widget_set_opacity(widget.payment_hover_left.image, 0);
-        gtk_widget_set_opacity(widget.payment_hover_right.image, 0);
+    }else if (presstime != 0 && presstime != 40)
+    {
+        paymentHoverAnimation(widget.payment_hover.image, 600*presstime/40, 515);
+        
     }
+    paymentOpacityAnimation(&widget.payment_qrcode, &widget.payment_card, status);
 
-    if(status != -1 && status%4 < 2 && presstime != 0)
-        gtk_widget_set_opacity(widget.payment_hover_left.image, (float)presstime/200);
-    else if(status != -1 && status%4 > 1 && presstime != 0)
-        gtk_widget_set_opacity(widget.payment_hover_right.image, (float)presstime/200);
-    else if(status != lastStatus) {
-        gtk_widget_set_opacity(widget.payment_hover_left.image, 0);
-        gtk_widget_set_opacity(widget.payment_hover_right.image, 0);
-    }
-    printf("status[%d]\npresstime[%d]\n", status, presstime);
-
-    status = lastStatus;
+    lastStatus = status;  
     
     return TRUE;
+}
+
+void paymentHoverAnimation(GtkWidget * select, int weight ,int height) {
+    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple(paymentbuf, weight, height, 
+                GDK_INTERP_NEAREST);
+
+    gtk_image_set_from_pixbuf(GTK_IMAGE(select), pixbuf);
+    g_object_unref(pixbuf);
+    
+}
+
+void paymentOpacityAnimation(gbutton *opacityWidgetA, gbutton *opacityWidgetB, int status) {
+    if( status!=-1 && status%4 < 2 && opacityWidgetA->opacity < 1) {
+        opacityWidgetA->opacity += 0.03;
+        gtk_widget_set_opacity(opacityWidgetA->image, opacityWidgetA->opacity);
+    }
+    else if((!(status%4 < 2) || status == -1) && opacityWidgetA->opacity > 0) {
+        opacityWidgetA->opacity -= 0.05;
+        gtk_widget_set_opacity(opacityWidgetA->image, opacityWidgetA->opacity);
+    }
+
+    if(status!=-1 && status%4 > 1 && opacityWidgetB->opacity < 1) {
+        opacityWidgetB->opacity += 0.03;
+        gtk_widget_set_opacity(opacityWidgetB->image, opacityWidgetB->opacity);
+    }
+    else if((!(status%4 > 1) || status == -1) && opacityWidgetB->opacity > 0) {
+        opacityWidgetB->opacity -= 0.05;
+        gtk_widget_set_opacity(opacityWidgetB->image, opacityWidgetB->opacity);
+    }
 }
