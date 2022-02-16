@@ -29,6 +29,7 @@ typedef uint8_t ParkingStatus;
 
 static GtkWidget *home;
 static GtkWidget *selectTimewindwos;
+static GtkWidget *paymentWindow;
 
 typedef struct _gbutton {
     GtkWidget *image;
@@ -48,6 +49,11 @@ typedef struct _widget {
     gbutton select_timer;
     gbutton select_hover;
     gbutton select_label;
+
+    GtkWidget *payment_fixed;
+    GtkWidget *payment_background;
+    gbutton payment_hover_left;
+    gbutton payment_hover_right;
 } Widget;
 
 typedef struct _ParkingData {
@@ -70,10 +76,6 @@ int progress;
 int presstime;
 int lastStatus;
 
-int select_time_weight;
-int goal_dist;
-int label_Y;
-int label_time;
 GdkPixbuf *buf;
 
 gboolean settime(gpointer);
@@ -105,4 +107,6 @@ gboolean selectTimeAnimation(gpointer);
 void selectHoverAnimation(GtkWidget *, int, int);
 
 void selectHoverOpacityAnimation(gbutton *, int );
+
+gboolean paymentAnimation(gpointer);
 #endif
