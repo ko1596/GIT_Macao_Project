@@ -27,9 +27,7 @@ typedef uint8_t ParkingStatus;
 /** @} ParkingStatus_group */
 
 
-static GtkWidget *home;
-static GtkWidget *selectTimewindwos;
-static GtkWidget *paymentWindow;
+ 
 
 typedef struct _gbutton {
     GtkWidget *image;
@@ -55,6 +53,13 @@ typedef struct _widget {
     gbutton payment_hover;
     gbutton payment_card;
     gbutton payment_qrcode;
+
+    GtkWidget *confirm_fixed;
+    GtkWidget *confirm_background;
+    GtkWidget *confirm_pay_label;
+    GtkWidget *confirm_park_label;
+    GtkWidget *confirm_time_label;
+    gbutton confirm_home_button;
 } Widget;
 
 typedef struct _ParkingData {
@@ -67,15 +72,26 @@ typedef struct _ParkingData {
     gint parkNum;
 } ParkingData;
 
+typedef struct _SelectData {
+    gint selectBlockNum;
+    gint selectTimeHour;
+    gint selectTimeMinute;
+    gint selectPayment;
+} SelectData;
+
 Widget widget;
 
 ParkingData parkingData[8];
+SelectData selectData;
 
 pthread_t gtkThread;
 
 int progress;
 int presstime;
 int lastStatus;
+int changedPayment;
+int paySuccess;
+int successCount;
 
 GdkPixbuf *buf;
 GdkPixbuf *paymentbuf;
@@ -115,4 +131,8 @@ gboolean paymentAnimation(gpointer);
 void paymentHoverAnimation(GtkWidget *, int , int);
 
 void paymentOpacityAnimation(gbutton *,gbutton *, int);
+
+gboolean confirmAnimation(gpointer);
+
+void confirmOpacityAnimation(gbutton *, int);
 #endif
