@@ -41,25 +41,28 @@ typedef struct _widget {
     GtkWidget *loading_bar;
     gbutton selectbutton;
     gbutton hoverAnimation;
-    GtkWidget *timeLabel;
+    GtkWidget *home_clock_label;
 
     GtkWidget *select_fixed;
     GtkWidget *select_background;
     gbutton select_timer;
     gbutton select_hover;
     gbutton select_label;
+    GtkWidget *select_clock_label;
 
     GtkWidget *payment_fixed;
     GtkWidget *payment_background;
     gbutton payment_hover;
     gbutton payment_card;
     gbutton payment_qrcode;
+    GtkWidget *payment_clock_label;
 
     GtkWidget *confirm_fixed;
     GtkWidget *confirm_background;
     GtkWidget *confirm_pay_label;
     GtkWidget *confirm_park_label;
     GtkWidget *confirm_time_label;
+    GtkWidget *confirm_clock_label;
     gbutton confirm_home_button;
 } Widget;
 

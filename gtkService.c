@@ -125,7 +125,7 @@ void* run(void* data) {
                 , (i/4) * 600 + 57, (i%4) * 270 + 29);
     }
 
-    updateParkingData();
+    
 
     widget->selectbutton.image = gtk_image_new_from_file("image/select.png");
     gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->selectbutton.image, 0, 0);    
@@ -136,10 +136,10 @@ void* run(void* data) {
     widget->loading_bar = gtk_image_new_from_file("image/loading_bar.png");
     gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->loading_bar, 143, 1205);
 
-    widget->timeLabel = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(widget->timeLabel)
-                , "<span font_desc='55' color='#FFFFFF' weight='bold'>00:00</span>");
-    gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->timeLabel,0 ,1500);
+    widget->home_clock_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(widget->home_clock_label)
+                , "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
+    gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->home_clock_label,0 ,1510);
 
     g_signal_new("loading",
              G_TYPE_OBJECT, G_SIGNAL_RUN_FIRST,
@@ -157,7 +157,7 @@ void* run(void* data) {
 
     gtk_widget_show_all(home);
 
-    updateParkingData();
+    
 
 
     widget->selectbutton.opacity = 0;
@@ -197,6 +197,11 @@ void* run(void* data) {
     widget->select_label.opacity = 0;
     gtk_widget_set_opacity(widget->select_label.image, widget->select_label.opacity);
 
+    widget->select_clock_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(widget->select_clock_label)
+                , "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
+    gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_clock_label,0 ,1510);
+
 
     // g_timeout_add(5, selectTimeAnimation, NULL);
 
@@ -218,18 +223,23 @@ void* run(void* data) {
     gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_background, 0, 0);
 
     widget->payment_hover.image = gtk_image_new_from_file("image/select_payment.png");
-    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover.image,0, 665);
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover.image,0, 750);
     paymentbuf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_payment.png", NULL);
 
     widget->payment_qrcode.image = gtk_image_new_from_file("image/payment_qrcode.png");
-    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_qrcode.image,144, 734);
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_qrcode.image,144, 809);
     gtk_widget_set_opacity(widget->payment_qrcode.image, widget->payment_qrcode.opacity);
     widget->payment_qrcode.opacity = 0;
 
     widget->payment_card.image = gtk_image_new_from_file("image/payment_card.png");
-    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_card.image, 827,739);
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_card.image, 827,814);
     widget->payment_card.opacity = 0;
     gtk_widget_set_opacity(widget->payment_card.image, widget->payment_card.opacity);
+
+    widget->payment_clock_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(widget->payment_clock_label)
+                , "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_clock_label,0 ,1510);
 
     // g_timeout_add(25, paymentAnimation, NULL);
     // gtk_widget_show_all(paymentWindow);  
@@ -265,10 +275,15 @@ void* run(void* data) {
     widget->confirm_home_button.image = gtk_image_new_from_file("image/home.png");
     gtk_fixed_put(GTK_FIXED(widget->confirm_fixed), widget->confirm_home_button.image ,441, 1333);
 
+    widget->confirm_clock_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(widget->confirm_clock_label)
+                , "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
+    gtk_fixed_put(GTK_FIXED(widget->confirm_fixed), widget->confirm_clock_label,0 ,1510);
+
     // g_timeout_add(100, confirmAnimation, NULL);
     // gtk_widget_show_all(confirmWindow);
     
-
+    updateParkingData();
     gtk_main();
 
     return (int*) data;
@@ -285,6 +300,21 @@ gboolean counter(gpointer data) {
 }
 
 void updateParkingData() {
+    char *timestamp;
+    GDateTime *d = g_date_time_new_now_local ();
+
+    timestamp = g_date_time_format (d, "%Y-%m-%d %H:%M\t\t    0000000001");
+    printf ("%s\n", timestamp);
+    
+    gchar *text_time = g_strdup_printf(\
+                "<span font_desc='50' color='#FFFFFF' weight='bold'>%s</span>"
+                , timestamp);
+    gtk_label_set_markup(GTK_LABEL(widget.home_clock_label) , text_time);
+    gtk_label_set_markup(GTK_LABEL(widget.select_clock_label) , text_time);
+    gtk_label_set_markup(GTK_LABEL(widget.payment_clock_label) , text_time);
+    gtk_label_set_markup(GTK_LABEL(widget.confirm_clock_label) , text_time);
+    g_date_time_unref (d);
+
     for (int i = 0; i < 8; i++) {
         switch (parkingData[i].parkingStatus)
         {
@@ -319,6 +349,7 @@ void updateParkingData() {
             break;
         }
     }
+    g_free (timestamp);
 }
 
 void showDeadline(ParkingData data) {
@@ -520,10 +551,10 @@ gboolean paymentAnimation(gpointer data) {
 
     if (status != -1 && status%4 < 2 && status != lastStatus) {
         gtk_fixed_move(GTK_FIXED(widget.payment_fixed), widget.payment_hover.image
-                        , 0, 665);
+                        , 0, 750);
     }else if(status != -1 && status%4 > 1 && status != lastStatus) {
         gtk_fixed_move(GTK_FIXED(widget.payment_fixed), widget.payment_hover.image
-                        , 600, 665);
+                        , 600, 750);
     }
 
     if(presstime == 40) {
@@ -539,11 +570,11 @@ gboolean paymentAnimation(gpointer data) {
 
     
     if(status != lastStatus) {
-        paymentHoverAnimation(widget.payment_hover.image, 1,515);
+        paymentHoverAnimation(widget.payment_hover.image, 1,535);
         presstime = 0;
     }else if (presstime != 0 && presstime != 40)
     {
-        paymentHoverAnimation(widget.payment_hover.image, 600*presstime/40, 515);
+        paymentHoverAnimation(widget.payment_hover.image, 600*presstime/40, 535);
         
     }
     paymentOpacityAnimation(&widget.payment_qrcode, &widget.payment_card, status);
@@ -563,20 +594,20 @@ void paymentHoverAnimation(GtkWidget * select, int weight ,int height) {
 }
 
 void paymentOpacityAnimation(gbutton *opacityWidgetA, gbutton *opacityWidgetB, int status) {
-    if( status!=-1 && status%4 < 2 && opacityWidgetA->opacity < 1) {
+    if( status < 20 && status > 11 && status%4 < 2 && opacityWidgetA->opacity < 1) {
         opacityWidgetA->opacity += 0.03;
         gtk_widget_set_opacity(opacityWidgetA->image, opacityWidgetA->opacity);
     }
-    else if((!(status%4 < 2) || status == -1) && opacityWidgetA->opacity > 0) {
+    else if((!(status%4 < 2) || status < 12 || status > 19) && opacityWidgetA->opacity > 0) {
         opacityWidgetA->opacity -= 0.05;
         gtk_widget_set_opacity(opacityWidgetA->image, opacityWidgetA->opacity);
     }
 
-    if(status!=-1 && status%4 > 1 && opacityWidgetB->opacity < 1) {
+    if( status < 20 && status > 11 && status%4 > 1 && opacityWidgetB->opacity < 1) {
         opacityWidgetB->opacity += 0.03;
         gtk_widget_set_opacity(opacityWidgetB->image, opacityWidgetB->opacity);
     }
-    else if((!(status%4 > 1) || status == -1) && opacityWidgetB->opacity > 0) {
+    else if((!(status%4 > 1) || status < 12 || status > 19) && opacityWidgetB->opacity > 0) {
         opacityWidgetB->opacity -= 0.05;
         gtk_widget_set_opacity(opacityWidgetB->image, opacityWidgetB->opacity);
     }
