@@ -136,6 +136,11 @@ void* run(void* data) {
     widget->loading_bar = gtk_image_new_from_file("image/loading_bar.png");
     gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->loading_bar, 143, 1205);
 
+    widget->timeLabel = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(widget->timeLabel)
+                , "<span font_desc='55' color='#FFFFFF' weight='bold'>00:00</span>");
+    gtk_fixed_put(GTK_FIXED(widget->home_fixed), widget->timeLabel,0 ,1500);
+
     g_signal_new("loading",
              G_TYPE_OBJECT, G_SIGNAL_RUN_FIRST,
              0, NULL, NULL,
@@ -213,7 +218,7 @@ void* run(void* data) {
     gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_background, 0, 0);
 
     widget->payment_hover.image = gtk_image_new_from_file("image/select_payment.png");
-    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover.image,0, 695);
+    gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover.image,0, 665);
     paymentbuf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_payment.png", NULL);
 
     widget->payment_qrcode.image = gtk_image_new_from_file("image/payment_qrcode.png");
@@ -515,10 +520,10 @@ gboolean paymentAnimation(gpointer data) {
 
     if (status != -1 && status%4 < 2 && status != lastStatus) {
         gtk_fixed_move(GTK_FIXED(widget.payment_fixed), widget.payment_hover.image
-                        , 0, 695);
+                        , 0, 665);
     }else if(status != -1 && status%4 > 1 && status != lastStatus) {
         gtk_fixed_move(GTK_FIXED(widget.payment_fixed), widget.payment_hover.image
-                        , 600, 695);
+                        , 600, 665);
     }
 
     if(presstime == 40) {

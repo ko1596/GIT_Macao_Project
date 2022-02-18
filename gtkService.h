@@ -41,6 +41,7 @@ typedef struct _widget {
     GtkWidget *loading_bar;
     gbutton selectbutton;
     gbutton hoverAnimation;
+    GtkWidget *timeLabel;
 
     GtkWidget *select_fixed;
     GtkWidget *select_background;
