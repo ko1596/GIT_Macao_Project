@@ -4,6 +4,7 @@ static GtkWidget *home;
 static GtkWidget *selectTimewindwos;
 static GtkWidget *paymentWindow;
 static GtkWidget *confirmWindow;
+static GtkWidget *connectionWindows;
 
 gboolean settime(gpointer data)
 {
@@ -81,6 +82,8 @@ void* run(void* data) {
     progress = 1;
     paySuccess = 0;
     successCount = 0;
+    spinnerStatus = 1;
+    connected=0;
 
     Widget *widget = (Widget*)(data);
 
@@ -184,7 +187,7 @@ void* run(void* data) {
 
     widget->select_hover.image = gtk_image_new_from_file("image/select_time_hover.png");
     gtk_fixed_put(GTK_FIXED(widget->select_fixed), widget->select_hover.image, 15, 800);
-    buf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_time_hover.png", NULL);
+    buf = gdk_pixbuf_new_from_file("image/select_time_hover.png", NULL);
     gtk_widget_set_opacity(widget->select_hover.image, 0);
 
     widget->select_timer.image = gtk_image_new_from_file("image/select_time.png");
@@ -224,7 +227,7 @@ void* run(void* data) {
 
     widget->payment_hover.image = gtk_image_new_from_file("image/select_payment.png");
     gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_hover.image,0, 750);
-    paymentbuf = gdk_pixbuf_new_from_file("/home/root/display_MO/image/select_payment.png", NULL);
+    paymentbuf = gdk_pixbuf_new_from_file("image/select_payment.png", NULL);
 
     widget->payment_qrcode.image = gtk_image_new_from_file("image/payment_qrcode.png");
     gtk_fixed_put(GTK_FIXED(widget->payment_fixed), widget->payment_qrcode.image,144, 809);
@@ -280,8 +283,35 @@ void* run(void* data) {
                 , "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
     gtk_fixed_put(GTK_FIXED(widget->confirm_fixed), widget->confirm_clock_label,0 ,1510);
 
+
+    
+    
+
     // g_timeout_add(100, confirmAnimation, NULL);
     // gtk_widget_show_all(confirmWindow);
+
+    connectionWindows = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_fullscreen(GTK_WINDOW(connectionWindows));
+
+    widget->connection_fixed = gtk_fixed_new();
+    gtk_container_add(GTK_CONTAINER(connectionWindows), widget->connection_fixed);
+
+    widget->connection_background = gtk_image_new_from_file("image/5_1.png");
+    gtk_fixed_put(GTK_FIXED(widget->connection_fixed), widget->connection_background, 0, 0);
+
+    // create the are we can draw in
+    GtkWidget *drawingArea;
+    drawingArea = gtk_drawing_area_new();
+    gtk_widget_set_size_request (drawingArea, 95, 95);
+    gtk_fixed_put(GTK_FIXED(widget->connection_fixed), drawingArea, 550 , 700);
+
+    spinnerImage = cairo_image_surface_create_from_png("image/spinner.png");
+
+    g_signal_connect(G_OBJECT(drawingArea), "draw", G_CALLBACK(spinnerAnimation), drawingArea);
+
+    // g_timeout_add(500,  spinnerStart, connectionWindows);
+    // gtk_widget_show_all(connectionWindows);
+
     
     updateParkingData();
     gtk_main();
@@ -327,7 +357,7 @@ void updateParkingData() {
             gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image)
                         , "image/deadline.png");
             gtk_widget_show(parkingData[i].image);
-            showDeadline(parkingData[i]);
+            showDeadline(&parkingData[i]);
             gtk_widget_show(parkingData[i].timeLabel);
             break;
 
@@ -352,19 +382,23 @@ void updateParkingData() {
     g_free (timestamp);
 }
 
-void showDeadline(ParkingData data) {
+void showDeadline(ParkingData *data) {
     int day,hour,minute;
     double elapsed_time; 
     time_t start = time(NULL);
-    elapsed_time = difftime( data.deadline, start );
+    elapsed_time = difftime( data->deadline, start );
 
     day = (int)(elapsed_time/60/60/24); 
     hour = (int)(elapsed_time/60/60-24*day); 
     minute = (int)(elapsed_time/60-60*hour-60*24*day);
 
+    if(day < 0 || minute < 1 || hour < 0) {
+        data->parkingStatus = PARKING_STATUS_EXPIRED;
+    }
+
     gchar *text_time = g_strdup_printf(\
         "<span font_desc='55' color='#DE9C18'>%02d : %02d</span>", hour, minute);
-    gtk_label_set_markup(GTK_LABEL(data.timeLabel), text_time);
+    gtk_label_set_markup(GTK_LABEL(data->timeLabel), text_time);
 }
 
 gboolean courseAnimation(gpointer home_fixed) {
@@ -394,6 +428,7 @@ gboolean courseAnimation(gpointer home_fixed) {
             presstime = 1;
             gtk_fixed_move(GTK_FIXED(home_fixed), widget.selectbutton.image
                         , selectBlockX, selectBlockY);
+
 
             gtk_fixed_move(GTK_FIXED(home_fixed), widget.hoverAnimation.image
                         , selectBlockX, selectBlockY);
@@ -619,6 +654,15 @@ gboolean confirmAnimation(gpointer data) {
 
     int money;
 
+    if (selectData.selectPayment && !connected) {
+        gtk_image_set_from_file(GTK_IMAGE(widget.connection_background), "image/5_1.png");
+        g_timeout_add(500,  spinnerStart, connectionWindows);
+        gtk_widget_hide(confirmWindow);
+        gtk_widget_show_all(connectionWindows);
+        connected = 1;
+        return FALSE;
+    }
+
     if (changedPayment){
         changedPayment = 0;
         if (selectData.selectPayment) {
@@ -664,6 +708,7 @@ gboolean confirmAnimation(gpointer data) {
 
     if(presstime > 20 || successCount > 50) {
         successCount = 0;
+        connected = 0;
         gtk_widget_hide(confirmWindow);
         gtk_widget_show(home);
         updateParkingData();
@@ -671,12 +716,18 @@ gboolean confirmAnimation(gpointer data) {
         return FALSE;
     }
 
+
     if (paySuccess) {
         printf("pay Success!\n");
-        
-        
-
-        if (changedPayment) {
+        if (selectData.selectPayment) {
+            if (connected == 1) {
+                connected = 2;
+                gtk_image_set_from_file(GTK_IMAGE(widget.connection_background), "image/5_3.png");
+                g_timeout_add(500,  spinnerStart, connectionWindows);
+                gtk_widget_hide(confirmWindow);
+                gtk_widget_show_all(connectionWindows);
+                return FALSE;
+            }
             if (paySuccess == 1){
                 parkingData[selectData.selectBlockNum].parkingStatus = PARKING_STATUS_DEADLINE;
                 struct tm *p;
@@ -685,10 +736,12 @@ gboolean confirmAnimation(gpointer data) {
                 p->tm_hour+=selectData.selectTimeHour;
                 p->tm_min+=selectData.selectTimeMinute;
                 parkingData[selectData.selectBlockNum].deadline = mktime(p); 
-                gtk_image_set_from_file(GTK_IMAGE(widget.confirm_background), "image/5_1.png");
+                gtk_image_set_from_file(GTK_IMAGE(widget.confirm_background), "image/5_4.png");
             }
             else if (paySuccess == 2)
-                gtk_image_set_from_file(GTK_IMAGE(widget.confirm_background), "image/5_2.png");
+                gtk_image_set_from_file(GTK_IMAGE(widget.confirm_background), "image/5_5.png");
+            
+            
         }else {
             if (paySuccess == 1){
                 parkingData[selectData.selectBlockNum].parkingStatus = PARKING_STATUS_DEADLINE;
@@ -730,4 +783,46 @@ void confirmOpacityAnimation(gbutton *opacityWidget, int status) {
         opacityWidget->opacity -= 0.5;
         gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
     }
+}
+
+gboolean spinnerAnimation(gpointer data)
+{
+    GdkWindow *gwindow = gtk_widget_get_window(GTK_WIDGET(data));
+
+    cairo_region_t *cairoRegion = cairo_region_create();
+
+    GdkDrawingContext *drawingContext;
+    drawingContext = gdk_window_begin_draw_frame(gwindow, cairoRegion);
+
+    cairo_t *cr = gdk_drawing_context_get_cairo_context(drawingContext);
+
+    cairo_translate (cr, 95/2, 95/2);
+    cairo_rotate (cr, ratio* M_PI/180);
+    cairo_translate (cr, -0.5*95, -0.5*95);
+
+    cairo_set_source_surface(cr, spinnerImage, 0, 0);
+    cairo_paint(cr);
+
+    
+    gdk_window_end_draw_frame(gwindow, drawingContext);
+    cairo_region_destroy(cairoRegion);
+    // printf("update spinner\n");
+    return FALSE;
+}
+
+gboolean spinnerStart(gpointer data) {
+    if(spinnerStatus) {
+        ratio += 10;
+        gtk_widget_queue_draw(GTK_WIDGET(data));
+    }
+
+    if(ratio >= 100) {
+        gtk_widget_hide(connectionWindows);
+        gtk_widget_show(confirmWindow);
+        g_timeout_add(100, confirmAnimation, NULL);
+        ratio = 0;
+        return FALSE;
+    }
+    
+    return TRUE;
 }

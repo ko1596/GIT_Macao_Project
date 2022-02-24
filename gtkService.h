@@ -5,6 +5,8 @@
 #include <gtk/gtk.h>
 #include <time.h>
 
+#define M_PI 3.141592653589793
+
 #define SELECT_BLOCK(x) ((x < 50000) && (x > 300))
 
 /** @defgroup ParkingStatus_group Defines Parking Status
@@ -64,6 +66,9 @@ typedef struct _widget {
     GtkWidget *confirm_time_label;
     GtkWidget *confirm_clock_label;
     gbutton confirm_home_button;
+
+    GtkWidget *connection_fixed;
+    GtkWidget *connection_background;
 } Widget;
 
 typedef struct _ParkingData {
@@ -96,6 +101,11 @@ int lastStatus;
 int changedPayment;
 int paySuccess;
 int successCount;
+int connected;
+
+int ratio;
+cairo_surface_t *spinnerImage;
+int spinnerStatus;
 
 GdkPixbuf *buf;
 GdkPixbuf *paymentbuf;
@@ -118,7 +128,7 @@ void updateParkingData();
 
 gboolean counter(gpointer);
 
-void showDeadline(ParkingData);
+void showDeadline(ParkingData*);
 
 gboolean courseAnimation(gpointer);
 
@@ -139,4 +149,9 @@ void paymentOpacityAnimation(gbutton *,gbutton *, int);
 gboolean confirmAnimation(gpointer);
 
 void confirmOpacityAnimation(gbutton *, int);
+
+gboolean spinnerAnimation(gpointer);
+
+gboolean spinnerStart(gpointer);
+
 #endif

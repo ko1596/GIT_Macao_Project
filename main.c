@@ -32,7 +32,7 @@ int main()
 
     parkingData[6].deadline = time(NULL);
     p = localtime(&parkingData[6].deadline);
-    p->tm_hour+=1;
+    p->tm_min+=1;
     parkingData[6].deadline = mktime(p); 
 
     pthread_create(&gtkThread, NULL, run, &widget);
@@ -43,6 +43,7 @@ int main()
         printf("1.啟動讀取條動畫\n");
         printf("2.輸入付款狀態\n");
         printf("3.設定車格狀態\n");
+        printf("4.開/關spinner動畫\n");
         printf("輸入功能:\n");
         scanf("%d", &buf);
         
@@ -70,6 +71,8 @@ int main()
             scanf("%d", &buf);
             parkingData[sb].parkingStatus = buf;
             updateParkingData();
+        }else if(buf ==4) {
+            spinnerStatus = !spinnerStatus;
         }
         
         // setPage(buf);
