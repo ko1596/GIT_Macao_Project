@@ -41,6 +41,63 @@ static GtkWidget *connection_background;
 static ParkingData parkingData[8];
 static SelectData selectData;
 
+static GdkPixbuf *home_loading_bar_buffer;
+static GdkPixbuf *home_hover_buffer;
+static GdkPixbuf *select_hover_buffer;
+static GdkPixbuf *payment_hover_buffer;
+
+void initBlockData() {
+    struct tm *p;
+    parkingData[0].parkingStatus = 0;
+    parkingData[1].parkingStatus = 1;
+    parkingData[2].parkingStatus = 2;
+    parkingData[3].parkingStatus = 3;
+    parkingData[4].parkingStatus = 3;
+    parkingData[5].parkingStatus = 2;
+    parkingData[6].parkingStatus = 1;
+    parkingData[7].parkingStatus = 0;
+
+    parkingData[0].parkNum = 21;
+    parkingData[1].parkNum = 22;
+    parkingData[2].parkNum = 23;
+    parkingData[3].parkNum = 24;
+    parkingData[4].parkNum = 25;
+    parkingData[5].parkNum = 26;
+    parkingData[6].parkNum = 27;
+    parkingData[7].parkNum = 28;
+
+    parkingData[1].deadline = time(NULL);
+    p = localtime(&parkingData[1].deadline);
+    p->tm_hour+=2;
+    p->tm_min+=13;
+    parkingData[1].deadline = mktime(p); 
+
+    parkingData[6].deadline = time(NULL);
+    p = localtime(&parkingData[6].deadline);
+    p->tm_min+=1;
+    parkingData[6].deadline = mktime(p); 
+}
+
+void changeParingStatus(int blockNum, int status) {
+    parkingData[blockNum].parkingStatus = status;
+}
+
+void 
+rescaleImage(GtkWidget *widget, 
+        GdkPixbuf *buffer, 
+        int width, 
+        int height) 
+{
+    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple(
+                                    buffer, 
+                                    width, 
+                                    height,
+                                    GDK_INTERP_NEAREST);
+
+    gtk_image_set_from_pixbuf(GTK_IMAGE(widget), pixbuf);
+    g_object_unref(pixbuf); 
+}
+
 gint findMaxArrayIndex(guint16 array[], gint array_size)
 {
     gint maxIndex = 0;
@@ -54,24 +111,12 @@ gint findMaxArrayIndex(guint16 array[], gint array_size)
     return maxIndex;
 }
 
-void refreshLoadingBerFrame(GtkWidget *loadingBar, int weight, int height)
-{
-    GdkPixbuf *pixbuf;
-
-    pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(loadingBar));
-    pixbuf = gdk_pixbuf_scale_simple(pixbuf, weight, height,
-                                     GDK_INTERP_NEAREST);
-
-    gtk_image_set_from_pixbuf(GTK_IMAGE(loadingBar), pixbuf);
-    g_object_unref(pixbuf);
-}
-
 gboolean progressLoadingBar(gpointer data)
 {
     static int progress;
     progress++;
     gtk_image_set_from_file(GTK_IMAGE(data), "image/loading_bar.png");
-    refreshLoadingBerFrame(GTK_WIDGET(data), progress, 45);
+    rescaleImage(GTK_WIDGET(data), home_loading_bar_buffer, progress, 45);
     gtk_widget_show(GTK_WIDGET(data));
     gtk_widget_show(GTK_WIDGET(mask));
     if (progress < 922)
@@ -87,18 +132,12 @@ gboolean progressLoadingBar(gpointer data)
     }
 }
 
-void loadingCallback(GtkWidget *loading_bar)
-{
-
-    printf("\nLoading\n");
-    g_timeout_add(5, progressLoadingBar, loading_bar);
-}
-
 void *run(void *data)
 {
     paySuccess = 0;
 
     gtk_init(NULL, NULL);
+    initBlockData();
 
     // GTK_WINDOW_POPUP         show on the top screen without windows
     // GTK_WINDOW_TOPLEVEL      have windows
@@ -113,6 +152,7 @@ void *run(void *data)
 
     hoverAnimation.image = gtk_image_new_from_file("image/hover.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), hoverAnimation.image, 0, 0);
+    home_hover_buffer = gdk_pixbuf_new_from_file("image/hover.png", NULL);
 
     for (int i = 0; i < 8; i++)
     {
@@ -132,28 +172,21 @@ void *run(void *data)
 
     selectbutton.image = gtk_image_new_from_file("image/select.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), selectbutton.image, 0, 0);
+    
 
     mask = gtk_image_new_from_file("image/loading_mask.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), mask, 0, 0);
 
     loading_bar = gtk_image_new_from_file("image/loading_bar.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), loading_bar, 143, 1205);
+    home_loading_bar_buffer = gdk_pixbuf_new_from_file("image/loading_bar.png", NULL);
 
     home_clock_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(home_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
     gtk_fixed_put(GTK_FIXED(home_fixed), home_clock_label, 0, 1510);
 
-    g_signal_new("loading",
-                 G_TYPE_OBJECT, G_SIGNAL_RUN_FIRST,
-                 0, NULL, NULL,
-                 g_cclosure_marshal_VOID__POINTER,
-                 G_TYPE_NONE, 1, G_TYPE_POINTER);
-
-    g_signal_connect(G_OBJECT(loading_bar), "loading", G_CALLBACK(loadingCallback), NULL);
-
-    g_timeout_add(60000, counter, NULL);
-
-    g_signal_emit_by_name(GTK_WIDGET(loading_bar), "loading");
+    g_timeout_add(60000, updateParkingData, (gpointer)1);
+    g_timeout_add(5, progressLoadingBar, loading_bar);
 
     gtk_widget_show_all(home);
 
@@ -174,7 +207,7 @@ void *run(void *data)
 
     select_hover.image = gtk_image_new_from_file("image/select_time_hover.png");
     gtk_fixed_put(GTK_FIXED(select_fixed), select_hover.image, 15, 800);
-    buf = gdk_pixbuf_new_from_file("image/select_time_hover.png", NULL);
+    select_hover_buffer = gdk_pixbuf_new_from_file("image/select_time_hover.png", NULL);
     gtk_widget_set_opacity(select_hover.image, 0);
 
     select_timer.image = gtk_image_new_from_file("image/select_time.png");
@@ -205,7 +238,7 @@ void *run(void *data)
 
     payment_hover.image = gtk_image_new_from_file("image/select_payment.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_hover.image, 0, 750);
-    paymentbuf = gdk_pixbuf_new_from_file("image/select_payment.png", NULL);
+    payment_hover_buffer = gdk_pixbuf_new_from_file("image/select_payment.png", NULL);
 
     payment_qrcode.image = gtk_image_new_from_file("image/payment_qrcode.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_qrcode.image, 144, 809);
@@ -277,24 +310,13 @@ void *run(void *data)
     // g_timeout_add(500,  spinnerStart, connectionWindows);
     // gtk_widget_show_all(connectionWindows);
 
-    updateParkingData();
+    g_timeout_add(1, updateParkingData, (gpointer)0);
     gtk_main();
 
     return (int *)data;
 }
 
-void startani()
-{
-    g_signal_emit_by_name(GTK_WIDGET(loading_bar), "loading");
-}
-
-gboolean counter(gpointer data)
-{
-    updateParkingData();
-    return TRUE;
-}
-
-void updateParkingData()
+gboolean updateParkingData(gpointer data)
 {
     char *timestamp;
     GDateTime *d = g_date_time_new_now_local();
@@ -343,6 +365,7 @@ void updateParkingData()
         }
     }
     g_free(timestamp);
+    return GPOINTER_TO_INT(data);
 }
 
 void showDeadline(ParkingData *data)
@@ -389,7 +412,10 @@ gboolean courseAnimation(gpointer home_fixed)
         if (status == lastStatus)
         {
             presstime++;
-            refreshLoadingBerFrame(hoverAnimation.image, (int)(568 * (float)presstime / 80), 40);
+            rescaleImage(hoverAnimation.image, 
+                        home_hover_buffer, 
+                        (int)(568 * (float)presstime / 80), 
+                        40);
         }
 
         else
@@ -479,7 +505,7 @@ gboolean selectTimeAnimation(gpointer data)
         if (status == lastStatus)
         {
             presstime++;
-            selectHoverAnimation(select_hover.image, 310 * presstime / 500, 330);
+            rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / 500, 330);
         }
         else
         {
@@ -522,15 +548,6 @@ gboolean selectTimeAnimation(gpointer data)
     lastStatus = status;
 
     return TRUE;
-}
-
-void selectHoverAnimation(GtkWidget *select, int weight, int height)
-{
-    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple(buf, weight, height,
-                                                GDK_INTERP_NEAREST);
-
-    gtk_image_set_from_pixbuf(GTK_IMAGE(select), pixbuf);
-    g_object_unref(pixbuf);
 }
 
 void selectHoverOpacityAnimation(gbutton *opacityWidget, int status)
@@ -593,28 +610,18 @@ gboolean paymentAnimation(gpointer data)
 
     if (status != lastStatus)
     {
-        paymentHoverAnimation(payment_hover.image, 1, 535);
+        rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
         presstime = 0;
     }
     else if (presstime != 0 && presstime != 40)
     {
-        paymentHoverAnimation(payment_hover.image, 600 * presstime / 40, 535);
+        rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / 40, 535);
     }
     paymentOpacityAnimation(&payment_qrcode, &payment_card, status);
 
     lastStatus = status;
 
     return TRUE;
-}
-
-void paymentHoverAnimation(GtkWidget *select, int weight, int height)
-{
-
-    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple(paymentbuf, weight, height,
-                                                GDK_INTERP_NEAREST);
-
-    gtk_image_set_from_pixbuf(GTK_IMAGE(select), pixbuf);
-    g_object_unref(pixbuf);
 }
 
 void paymentOpacityAnimation(gbutton *opacityWidgetA, gbutton *opacityWidgetB, int status)
@@ -692,7 +699,7 @@ gboolean confirmAnimation(gpointer data)
     gtk_label_set_markup(GTK_LABEL(confirm_park_label), text_time);
 
     text_time = g_strdup_printf(
-        "<span font_desc='45' color='#000000'>%d:%d</span>", selectData.selectTimeHour, selectData.selectTimeMinute);
+        "<span font_desc='45' color='#000000'>%02d:%02d</span>", selectData.selectTimeHour, selectData.selectTimeMinute);
     gtk_label_set_markup(GTK_LABEL(confirm_time_label), text_time);
 
     if (SELECT_BLOCK(block[maxIndex]))
@@ -717,7 +724,7 @@ gboolean confirmAnimation(gpointer data)
         connected = 0;
         gtk_widget_hide(confirmWindow);
         gtk_widget_show(home);
-        updateParkingData();
+        g_timeout_add(10, updateParkingData, (gpointer)0);
         g_timeout_add(16, courseAnimation, home_fixed);
         return FALSE;
     }

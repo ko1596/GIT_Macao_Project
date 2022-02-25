@@ -59,24 +59,19 @@ int paySuccess;
 
 cairo_surface_t *spinnerImage;
 
-GdkPixbuf *buf;
-GdkPixbuf *paymentbuf;
+void initBlockData();
+
+void changeParingStatus(int, int);
+
+void rescaleImage(GtkWidget *, GdkPixbuf *, int, int);
 
 gint findMaxArrayIndex(guint16[], gint);
 
-void refreshLoadingBerFrame(GtkWidget *, int, int);
-
 gboolean progressLoadingBar(gpointer);
-
-void loadingCallback(GtkWidget*);
 
 void* run(void*);
 
-void startani();
-
-void updateParkingData();
-
-gboolean counter(gpointer);
+gboolean updateParkingData(gpointer);
 
 void showDeadline(ParkingData*);
 
@@ -86,13 +81,9 @@ void homeAnimation(gbutton*, int);
 
 gboolean selectTimeAnimation(gpointer);
 
-void selectHoverAnimation(GtkWidget *, int, int);
-
 void selectHoverOpacityAnimation(gbutton *, int );
 
 gboolean paymentAnimation(gpointer);
-
-void paymentHoverAnimation(GtkWidget *, int , int);
 
 void paymentOpacityAnimation(gbutton *,gbutton *, int);
 
