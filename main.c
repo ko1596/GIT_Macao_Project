@@ -35,7 +35,7 @@ int main()
     p->tm_min+=1;
     parkingData[6].deadline = mktime(p); 
 
-    pthread_create(&gtkThread, NULL, run, &widget);
+    pthread_create(&gtkThread, NULL, run, NULL);
     pthread_create(&serialThread, NULL, UartLoop, NULL);
     
     while(1) {
@@ -48,7 +48,7 @@ int main()
         scanf("%d", &buf);
         
         if(buf == 1) {
-            startani(widget.loading_bar);
+            startani();
         }else if(buf == 2) {
             printf("------------付款狀態------------\n");
             printf("1.付款成功\n");

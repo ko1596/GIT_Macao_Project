@@ -28,48 +28,10 @@ typedef uint8_t ParkingStatus;
 #define PARKING_STATUS_PAYMENT              ((ParkingStatus)  3)    
 /** @} ParkingStatus_group */
 
-
- 
-
 typedef struct _gbutton {
     GtkWidget *image;
     double opacity;
 } gbutton;
-
-typedef struct _widget {
-    GtkWidget *home_fixed;
-    GtkWidget *home_background;
-    GtkWidget *mask;
-    GtkWidget *loading_bar;
-    gbutton selectbutton;
-    gbutton hoverAnimation;
-    GtkWidget *home_clock_label;
-
-    GtkWidget *select_fixed;
-    GtkWidget *select_background;
-    gbutton select_timer;
-    gbutton select_hover;
-    gbutton select_label;
-    GtkWidget *select_clock_label;
-
-    GtkWidget *payment_fixed;
-    GtkWidget *payment_background;
-    gbutton payment_hover;
-    gbutton payment_card;
-    gbutton payment_qrcode;
-    GtkWidget *payment_clock_label;
-
-    GtkWidget *confirm_fixed;
-    GtkWidget *confirm_background;
-    GtkWidget *confirm_pay_label;
-    GtkWidget *confirm_park_label;
-    GtkWidget *confirm_time_label;
-    GtkWidget *confirm_clock_label;
-    gbutton confirm_home_button;
-
-    GtkWidget *connection_fixed;
-    GtkWidget *connection_background;
-} Widget;
 
 typedef struct _ParkingData {
     GtkWidget *image;
@@ -88,29 +50,17 @@ typedef struct _SelectData {
     gint selectPayment;
 } SelectData;
 
-Widget widget;
-
-ParkingData parkingData[8];
-SelectData selectData;
 
 pthread_t gtkThread;
 
-int progress;
-int presstime;
-int lastStatus;
 int changedPayment;
 int paySuccess;
-int successCount;
-int connected;
 
-int ratio;
+
 cairo_surface_t *spinnerImage;
-int spinnerStatus;
 
 GdkPixbuf *buf;
 GdkPixbuf *paymentbuf;
-
-gboolean settime(gpointer);
 
 gint findMaxArrayIndex(guint16[], gint);
 
@@ -122,7 +72,7 @@ void loadingCallback(GtkWidget*);
 
 void* run(void*);
 
-void startani(GtkWidget *);
+void startani();
 
 void updateParkingData();
 
@@ -132,7 +82,7 @@ void showDeadline(ParkingData*);
 
 gboolean courseAnimation(gpointer);
 
-void hoverAnimation(gbutton*, int);
+void homeAnimation(gbutton*, int);
 
 gboolean selectTimeAnimation(gpointer);
 
