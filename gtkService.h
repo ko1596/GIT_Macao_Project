@@ -9,6 +9,8 @@
 
 #define SELECT_BLOCK(x) ((x < 50000) && (x > 300))
 
+#define SELECT_BUTTON_TIME 45       //60 * 16 ~= 960ms
+
 /** @defgroup ParkingStatus_group Defines Parking Status
  *  Defines all possible Status
  *  @{
@@ -50,10 +52,8 @@ typedef struct _SelectData {
     gint selectPayment;
 } SelectData;
 
-
 pthread_t gtkThread;
 
-int changedPayment;
 int paySuccess;
 
 

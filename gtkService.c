@@ -1,5 +1,7 @@
 #include "gtkService.h"
 
+
+
 static GtkWidget *home;
 static GtkWidget *home_fixed;
 static GtkWidget *home_background;
@@ -45,6 +47,8 @@ static GdkPixbuf *home_loading_bar_buffer;
 static GdkPixbuf *home_hover_buffer;
 static GdkPixbuf *select_hover_buffer;
 static GdkPixbuf *payment_hover_buffer;
+
+
 
 void initBlockData() {
     struct tm *p;
@@ -129,6 +133,19 @@ gboolean progressLoadingBar(gpointer data)
         g_timeout_add(16, courseAnimation, home_fixed);
         printf("Loading Done!\n");
         return FALSE;
+    }
+}
+
+static void opacityAnimation(gbutton *gb, gboolean hover) {
+    if (hover && gb->opacity < 1)
+    {
+        gb->opacity += 0.05;
+        gtk_widget_set_opacity(gb->image, gb->opacity);
+    }
+    else if (!hover && gb->opacity > 0)
+    {
+        gb->opacity -= 0.05;
+        gtk_widget_set_opacity(gb->image, gb->opacity);
     }
 }
 
@@ -393,6 +410,7 @@ gboolean courseAnimation(gpointer home_fixed)
 {
     static int presstime;
     static int lastStatus;
+    static int delayTimes = 0;
     gint maxIndex = findMaxArrayIndex(block, 24);
     int status = 0;
     int selectBlockX = ((maxIndex / 2) % 2) * 600 + 20;
@@ -414,10 +432,9 @@ gboolean courseAnimation(gpointer home_fixed)
             presstime++;
             rescaleImage(hoverAnimation.image, 
                         home_hover_buffer, 
-                        (int)(568 * (float)presstime / 80), 
+                        (int)(568 * (float)presstime / SELECT_BUTTON_TIME), 
                         40);
         }
-
         else
         {
             presstime = 1;
@@ -427,48 +444,29 @@ gboolean courseAnimation(gpointer home_fixed)
         }
     }
 
-    if (presstime > 80)
+    if (presstime > SELECT_BUTTON_TIME)
     {
+        presstime = 0;
         if (parkingData[(status / 2) + ((status) % 2 * 4)].parkingStatus == PARKING_STATUS_PAYMENT)
         {
             gtk_widget_hide(home);
             gtk_widget_show_all(selectTimewindwos);
-            g_timeout_add(5, selectTimeAnimation, NULL);
+            g_timeout_add(16, selectTimeAnimation, NULL);
             lastStatus = 12; //防止下一頁位置錯誤
-            presstime = 0;
+            
             // printf("[%d] [%d] + [%d] = %d\n", status, (status/2), ((status) % 2 * 4), (status/2) + ((status) % 2 * 4) );
             selectData.selectBlockNum = (status / 2) + ((status) % 2 * 4);
             printf("select block [%d]\n", selectData.selectBlockNum);
             printf("Go to page 2\n");
             return FALSE;
         }
-        else
-        {
-            presstime = 0;
-        }
     }
-
-    homeAnimation(&selectbutton, status);
-    homeAnimation(&hoverAnimation, status);
+    opacityAnimation(&selectbutton, status > -1 && status < 8);
+    opacityAnimation(&hoverAnimation, status > -1 && status < 8);
     // printf("status [%d]\n", status);
     lastStatus = status;
 
     return TRUE;
-}
-
-void homeAnimation(gbutton *opacityWidget, int status)
-{
-    if (status > -1 && status < 8 && opacityWidget->opacity < 1)
-    {
-        opacityWidget->opacity += 0.05;
-        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
-    }
-    else if ((status < 0 || status > 7) && opacityWidget->opacity > 0)
-    {
-        opacityWidget->opacity -= 0.05;
-        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
-    }
-    // printf("Opacity: %f\n", opacityopacity);
 }
 
 gboolean selectTimeAnimation(gpointer data)
@@ -505,7 +503,7 @@ gboolean selectTimeAnimation(gpointer data)
         if (status == lastStatus)
         {
             presstime++;
-            rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / 500, 330);
+            rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / SELECT_BUTTON_TIME, 330);
         }
         else
         {
@@ -524,7 +522,7 @@ gboolean selectTimeAnimation(gpointer data)
         }
     }
 
-    if (presstime > 500)
+    if (presstime > SELECT_BUTTON_TIME)
     {
         presstime = 0;
         select_label.opacity = 0;
@@ -537,32 +535,17 @@ gboolean selectTimeAnimation(gpointer data)
 
         gtk_widget_hide(selectTimewindwos);
         gtk_widget_show_all(paymentWindow);
-        g_timeout_add(25, paymentAnimation, NULL);
+        g_timeout_add(16, paymentAnimation, NULL);
 
         printf("Go to page 3\n");
         return FALSE;
     }
 
-    selectHoverOpacityAnimation(&select_hover, status);
-    selectHoverOpacityAnimation(&select_label, status);
+    opacityAnimation(&select_hover, status > 11 && status < 20);
+    opacityAnimation(&select_label, status > 11 && status < 20);
     lastStatus = status;
 
     return TRUE;
-}
-
-void selectHoverOpacityAnimation(gbutton *opacityWidget, int status)
-{
-    if (status > 11 && status < 20 && opacityWidget->opacity < 1)
-    {
-        opacityWidget->opacity += 0.005;
-        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
-    }
-    else if ((status < 12 || status > 19) && opacityWidget->opacity > 0)
-    {
-        opacityWidget->opacity -= 0.05;
-        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
-    }
-    // printf("Opacity: %f\n", opacityopacity);
 }
 
 gboolean paymentAnimation(gpointer data)
@@ -596,15 +579,15 @@ gboolean paymentAnimation(gpointer data)
         gtk_fixed_move(GTK_FIXED(payment_fixed), payment_hover.image, 600, 750);
     }
 
-    if (presstime == 40)
+    if (presstime == SELECT_BUTTON_TIME)
     {
         presstime = 0;
         selectData.selectPayment = status % 4 > 1;
-        changedPayment = 1;
+        
         printf("select payment %d\n", selectData.selectPayment);
         gtk_widget_hide(paymentWindow);
         gtk_widget_show_all(confirmWindow);
-        g_timeout_add(100, confirmAnimation, NULL);
+        g_timeout_add(16, confirmAnimation, NULL);
         return FALSE;
     }
 
@@ -613,40 +596,15 @@ gboolean paymentAnimation(gpointer data)
         rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
         presstime = 0;
     }
-    else if (presstime != 0 && presstime != 40)
+    else if (presstime != 0 && presstime != SELECT_BUTTON_TIME)
     {
-        rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / 40, 535);
+        rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / SELECT_BUTTON_TIME, 535);
     }
-    paymentOpacityAnimation(&payment_qrcode, &payment_card, status);
-
+    opacityAnimation(&payment_qrcode, status != -1 && status % 4 < 2);
+    opacityAnimation(&payment_card, status != -1 && status % 4 > 1);
     lastStatus = status;
 
     return TRUE;
-}
-
-void paymentOpacityAnimation(gbutton *opacityWidgetA, gbutton *opacityWidgetB, int status)
-{
-    if (status < 20 && status > 11 && status % 4 < 2 && opacityWidgetA->opacity < 1)
-    {
-        opacityWidgetA->opacity += 0.03;
-        gtk_widget_set_opacity(opacityWidgetA->image, opacityWidgetA->opacity);
-    }
-    else if ((!(status % 4 < 2) || status < 12 || status > 19) && opacityWidgetA->opacity > 0)
-    {
-        opacityWidgetA->opacity -= 0.05;
-        gtk_widget_set_opacity(opacityWidgetA->image, opacityWidgetA->opacity);
-    }
-
-    if (status < 20 && status > 11 && status % 4 > 1 && opacityWidgetB->opacity < 1)
-    {
-        opacityWidgetB->opacity += 0.03;
-        gtk_widget_set_opacity(opacityWidgetB->image, opacityWidgetB->opacity);
-    }
-    else if ((!(status % 4 > 1) || status < 12 || status > 19) && opacityWidgetB->opacity > 0)
-    {
-        opacityWidgetB->opacity -= 0.05;
-        gtk_widget_set_opacity(opacityWidgetB->image, opacityWidgetB->opacity);
-    }
 }
 
 gboolean confirmAnimation(gpointer data)
@@ -654,15 +612,16 @@ gboolean confirmAnimation(gpointer data)
     static int presstime;
     static int successCount;
     static int connected;
+    static int changedPayment = 1;
     gint maxIndex = findMaxArrayIndex(block, 24);
     int status = 0;
 
-    int money;
+    int money = 8 * selectData.selectTimeHour + 4 * selectData.selectTimeMinute / 30;
 
     if (selectData.selectPayment && !connected)
     {
         gtk_image_set_from_file(GTK_IMAGE(connection_background), "image/5_1.png");
-        g_timeout_add(500, spinnerStart, connectionWindows);
+        g_timeout_add(100, spinnerStart, connectionWindows);
         gtk_widget_hide(confirmWindow);
         gtk_widget_show_all(connectionWindows);
         connected = 1;
@@ -671,6 +630,18 @@ gboolean confirmAnimation(gpointer data)
 
     if (changedPayment)
     {
+        gchar *text_time = g_strdup_printf(
+            "<span font_desc='45' color='#000000'>$ %d</span>", money);
+        gtk_label_set_markup(GTK_LABEL(confirm_pay_label), text_time);
+
+        text_time = g_strdup_printf(
+            "<span font_desc='45' color='#000000'>%d</span>", parkingData[selectData.selectBlockNum].parkNum);
+        gtk_label_set_markup(GTK_LABEL(confirm_park_label), text_time);
+
+        text_time = g_strdup_printf(
+            "<span font_desc='45' color='#000000'>%02d:%02d</span>", selectData.selectTimeHour, selectData.selectTimeMinute);
+        gtk_label_set_markup(GTK_LABEL(confirm_time_label), text_time);
+
         changedPayment = 0;
         if (selectData.selectPayment)
         {
@@ -688,20 +659,7 @@ gboolean confirmAnimation(gpointer data)
         }
     }
 
-    money = 8 * selectData.selectTimeHour + 4 * selectData.selectTimeMinute / 30;
-
-    gchar *text_time = g_strdup_printf(
-        "<span font_desc='45' color='#000000'>$ %d</span>", money);
-    gtk_label_set_markup(GTK_LABEL(confirm_pay_label), text_time);
-
-    text_time = g_strdup_printf(
-        "<span font_desc='45' color='#000000'>%d</span>", parkingData[selectData.selectBlockNum].parkNum);
-    gtk_label_set_markup(GTK_LABEL(confirm_park_label), text_time);
-
-    text_time = g_strdup_printf(
-        "<span font_desc='45' color='#000000'>%02d:%02d</span>", selectData.selectTimeHour, selectData.selectTimeMinute);
-    gtk_label_set_markup(GTK_LABEL(confirm_time_label), text_time);
-
+    
     if (SELECT_BLOCK(block[maxIndex]))
     {
         status = maxIndex;
@@ -718,14 +676,16 @@ gboolean confirmAnimation(gpointer data)
         presstime = 0;
     }
 
-    if (presstime > 20 || successCount > 50)
+    if (presstime > SELECT_BUTTON_TIME || successCount > 300)
     {
+        presstime=0;
         successCount = 0;
         connected = 0;
         gtk_widget_hide(confirmWindow);
         gtk_widget_show(home);
         g_timeout_add(10, updateParkingData, (gpointer)0);
         g_timeout_add(16, courseAnimation, home_fixed);
+        changedPayment = 1;
         return FALSE;
     }
 
@@ -738,9 +698,10 @@ gboolean confirmAnimation(gpointer data)
             {
                 connected = 2;
                 gtk_image_set_from_file(GTK_IMAGE(connection_background), "image/5_3.png");
-                g_timeout_add(500, spinnerStart, connectionWindows);
+                g_timeout_add(100, spinnerStart, connectionWindows);
                 gtk_widget_hide(confirmWindow);
                 gtk_widget_show_all(connectionWindows);
+                changedPayment = 1;
                 return FALSE;
             }
             if (paySuccess == 1)
@@ -787,22 +748,8 @@ gboolean confirmAnimation(gpointer data)
         successCount++;
     }
 
-    confirmOpacityAnimation(&confirm_home_button, status);
+    opacityAnimation(&confirm_home_button, status == 21 || status == 22);
     return TRUE;
-}
-
-void confirmOpacityAnimation(gbutton *opacityWidget, int status)
-{
-    if ((status == 21 || status == 22) && opacityWidget->opacity < 1)
-    {
-        opacityWidget->opacity += 0.5;
-        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
-    }
-    else if (!(status == 21 || status == 22) && opacityWidget->opacity > 0)
-    {
-        opacityWidget->opacity -= 0.5;
-        gtk_widget_set_opacity(opacityWidget->image, opacityWidget->opacity);
-    }
 }
 
 gboolean spinnerAnimation(gpointer data)
@@ -827,7 +774,7 @@ gboolean spinnerAnimation(gpointer data)
     gdk_window_end_draw_frame(gwindow, drawingContext);
     cairo_region_destroy(cairoRegion);
 
-    ratio += 10;
+    ratio += 5;
     // printf("update spinner\n");
     return FALSE;
 }
@@ -837,14 +784,15 @@ gboolean spinnerStart(gpointer data)
     static int skipTime = 0;
     gtk_widget_queue_draw(GTK_WIDGET(data));
 
-    if (skipTime++ >= 10)
+    if (skipTime++ >= 50)
     {
         gtk_widget_hide(connectionWindows);
         gtk_widget_show(confirmWindow);
-        g_timeout_add(100, confirmAnimation, NULL);
+        g_timeout_add(16, confirmAnimation, NULL);
         skipTime = 0;
         return FALSE;
     }
 
     return TRUE;
 }
+
