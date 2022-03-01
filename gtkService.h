@@ -54,37 +54,13 @@ typedef struct _SelectData {
 
 pthread_t gtkThread;
 
-int paySuccess;
 
 
-cairo_surface_t *spinnerImage;
-
-void initBlockData();
+void changePaySuccess(int);
 
 void changeParingStatus(int, int);
 
-void rescaleImage(GtkWidget *, GdkPixbuf *, int, int);
-
-gint findMaxArrayIndex(guint16[], gint);
-
-gboolean progressLoadingBar(gpointer);
-
 void* run(void*);
 
-gboolean updateParkingData(gpointer);
-
-void showDeadline(ParkingData*);
-
-gboolean courseAnimation(gpointer);
-
-gboolean selectTimeAnimation(gpointer);
-
-gboolean paymentAnimation(gpointer);
-
-gboolean confirmAnimation(gpointer);
-
 gboolean spinnerAnimation(gpointer);
-
-gboolean spinnerStart(gpointer);
-
 #endif

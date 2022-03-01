@@ -21,7 +21,7 @@ int main()
             printf("0.付款成功\n");
             printf("1.付款失敗\n");
             scanf("%d", &buf);
-            paySuccess = buf;
+            changePaySuccess(buf);
         }else if(buf == 2) {
             
             printf("------------修改車格狀態------------\n");
@@ -37,7 +37,6 @@ int main()
 
             scanf("%d", &buf);
             changeParingStatus(sb, buf);
-            updateParkingData((gpointer)0);
         }
         
         // setPage(buf);

@@ -48,9 +48,17 @@ static GdkPixbuf *home_hover_buffer;
 static GdkPixbuf *select_hover_buffer;
 static GdkPixbuf *payment_hover_buffer;
 
+static cairo_surface_t *spinnerImage;
 
+static int paySuccess;
 
-void initBlockData() {
+static void changePage(int page);
+
+void changePaySuccess(int status) {
+    paySuccess = status;
+}
+
+static void initBlockData() {
     struct tm *p;
     parkingData[0].parkingStatus = 0;
     parkingData[1].parkingStatus = 1;
@@ -86,7 +94,7 @@ void changeParingStatus(int blockNum, int status) {
     parkingData[blockNum].parkingStatus = status;
 }
 
-void 
+static void 
 rescaleImage(GtkWidget *widget, 
         GdkPixbuf *buffer, 
         int width, 
@@ -102,7 +110,7 @@ rescaleImage(GtkWidget *widget,
     g_object_unref(pixbuf); 
 }
 
-gint findMaxArrayIndex(guint16 array[], gint array_size)
+static gint findMaxArrayIndex(guint16 array[], gint array_size)
 {
     gint maxIndex = 0;
     guint16 maxValue = 0;
@@ -115,7 +123,7 @@ gint findMaxArrayIndex(guint16 array[], gint array_size)
     return maxIndex;
 }
 
-gboolean progressLoadingBar(gpointer data)
+static gboolean progressLoadingBar(gpointer data)
 {
     static int progress;
     progress++;
@@ -130,7 +138,7 @@ gboolean progressLoadingBar(gpointer data)
         progress = 0;
         gtk_widget_hide(GTK_WIDGET(data));
         gtk_widget_hide(GTK_WIDGET(mask));
-        g_timeout_add(16, courseAnimation, home_fixed);
+        changePage(1);
         printf("Loading Done!\n");
         return FALSE;
     }
@@ -155,6 +163,79 @@ static gint getSelectBlock(){
         return maxIndex;
     else
         return -1;
+}
+
+static void showDeadline(ParkingData *data)
+{
+    int day, hour, minute;
+    double elapsed_time;
+    time_t start = time(NULL);
+    elapsed_time = difftime(data->deadline, start);
+
+    day = (int)(elapsed_time / 60 / 60 / 24);
+    hour = (int)(elapsed_time / 60 / 60 - 24 * day);
+    minute = (int)(elapsed_time / 60 - 60 * hour - 60 * 24 * day);
+
+    if (day < 0 || minute < 1 || hour < 0)
+    {
+        data->parkingStatus = PARKING_STATUS_EXPIRED;
+    }
+
+    gchar *text_time = g_strdup_printf(
+        "<span font_desc='55' color='#DE9C18'>%02d : %02d</span>", hour, minute);
+    gtk_label_set_markup(GTK_LABEL(data->timeLabel), text_time);
+}
+
+static gboolean updateParkingData(gpointer data)
+{
+    char *timestamp;
+    GDateTime *d = g_date_time_new_now_local();
+
+    timestamp = g_date_time_format(d, "%Y-%m-%d %H:%M\t\t    0000000001");
+    printf("%s\n", timestamp);
+
+    gchar *text_time = g_strdup_printf(
+        "<span font_desc='50' color='#FFFFFF' weight='bold'>%s</span>", timestamp);
+    gtk_label_set_markup(GTK_LABEL(home_clock_label), text_time);
+    gtk_label_set_markup(GTK_LABEL(select_clock_label), text_time);
+    gtk_label_set_markup(GTK_LABEL(payment_clock_label), text_time);
+    gtk_label_set_markup(GTK_LABEL(confirm_clock_label), text_time);
+    g_date_time_unref(d);
+
+    for (int i = 0; i < 8; i++)
+    {
+        switch (parkingData[i].parkingStatus)
+        {
+        case PARKING_STATUS_EMPTY:
+            gtk_widget_hide(parkingData[i].image);
+            gtk_widget_hide(parkingData[i].timeLabel);
+            break;
+
+        case PARKING_STATUS_DEADLINE:
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/deadline.png");
+            gtk_widget_show(parkingData[i].image);
+            showDeadline(&parkingData[i]);
+            gtk_widget_show(parkingData[i].timeLabel);
+            break;
+
+        case PARKING_STATUS_EXPIRED:
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/expired.png");
+            gtk_widget_show(parkingData[i].image);
+            gtk_widget_hide(parkingData[i].timeLabel);
+            break;
+
+        case PARKING_STATUS_PAYMENT:
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/payment.png");
+            gtk_widget_show(parkingData[i].image);
+            gtk_widget_hide(parkingData[i].timeLabel);
+            break;
+
+        default:
+            break;
+        }
+    }
+    g_free(timestamp);
+    return GPOINTER_TO_INT(data);
 }
 
 void *run(void *data)
@@ -211,7 +292,7 @@ void *run(void *data)
     gtk_fixed_put(GTK_FIXED(home_fixed), home_clock_label, 0, 1510);
 
     g_timeout_add(60000, updateParkingData, (gpointer)1);
-    g_timeout_add(5, progressLoadingBar, loading_bar);
+    changePage(0);
 
     gtk_widget_show_all(home);
 
@@ -341,84 +422,11 @@ void *run(void *data)
     return (int *)data;
 }
 
-gboolean updateParkingData(gpointer data)
-{
-    char *timestamp;
-    GDateTime *d = g_date_time_new_now_local();
-
-    timestamp = g_date_time_format(d, "%Y-%m-%d %H:%M\t\t    0000000001");
-    printf("%s\n", timestamp);
-
-    gchar *text_time = g_strdup_printf(
-        "<span font_desc='50' color='#FFFFFF' weight='bold'>%s</span>", timestamp);
-    gtk_label_set_markup(GTK_LABEL(home_clock_label), text_time);
-    gtk_label_set_markup(GTK_LABEL(select_clock_label), text_time);
-    gtk_label_set_markup(GTK_LABEL(payment_clock_label), text_time);
-    gtk_label_set_markup(GTK_LABEL(confirm_clock_label), text_time);
-    g_date_time_unref(d);
-
-    for (int i = 0; i < 8; i++)
-    {
-        switch (parkingData[i].parkingStatus)
-        {
-        case PARKING_STATUS_EMPTY:
-            gtk_widget_hide(parkingData[i].image);
-            gtk_widget_hide(parkingData[i].timeLabel);
-            break;
-
-        case PARKING_STATUS_DEADLINE:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/deadline.png");
-            gtk_widget_show(parkingData[i].image);
-            showDeadline(&parkingData[i]);
-            gtk_widget_show(parkingData[i].timeLabel);
-            break;
-
-        case PARKING_STATUS_EXPIRED:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/expired.png");
-            gtk_widget_show(parkingData[i].image);
-            gtk_widget_hide(parkingData[i].timeLabel);
-            break;
-
-        case PARKING_STATUS_PAYMENT:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/payment.png");
-            gtk_widget_show(parkingData[i].image);
-            gtk_widget_hide(parkingData[i].timeLabel);
-            break;
-
-        default:
-            break;
-        }
-    }
-    g_free(timestamp);
-    return GPOINTER_TO_INT(data);
-}
-
-void showDeadline(ParkingData *data)
-{
-    int day, hour, minute;
-    double elapsed_time;
-    time_t start = time(NULL);
-    elapsed_time = difftime(data->deadline, start);
-
-    day = (int)(elapsed_time / 60 / 60 / 24);
-    hour = (int)(elapsed_time / 60 / 60 - 24 * day);
-    minute = (int)(elapsed_time / 60 - 60 * hour - 60 * 24 * day);
-
-    if (day < 0 || minute < 1 || hour < 0)
-    {
-        data->parkingStatus = PARKING_STATUS_EXPIRED;
-    }
-
-    gchar *text_time = g_strdup_printf(
-        "<span font_desc='55' color='#DE9C18'>%02d : %02d</span>", hour, minute);
-    gtk_label_set_markup(GTK_LABEL(data->timeLabel), text_time);
-}
-
-gboolean courseAnimation(gpointer home_fixed)
+static gboolean courseAnimation(gpointer home_fixed)
 {
     static int presstime;
     static int lastStatus;
-    static int delayTimes = 0;
+    // static int delayTimes = 0;
     int status = getSelectBlock();
     int selectBlockX = ((status / 2) % 2) * 600 + 20;
     int selectBlockY = ((status / 2) / 2) * 270 + 30;
@@ -450,7 +458,7 @@ gboolean courseAnimation(gpointer home_fixed)
         {
             gtk_widget_hide(home);
             gtk_widget_show_all(selectTimewindwos);
-            g_timeout_add(16, selectTimeAnimation, select_fixed);
+            changePage(2);
             
             selectData.selectBlockNum = (status / 4) + ((status / 2) % 2 * 4);
             printf("select block [%d]\n", selectData.selectBlockNum);
@@ -466,7 +474,7 @@ gboolean courseAnimation(gpointer home_fixed)
     return TRUE;
 }
 
-gboolean selectTimeAnimation(gpointer fix)
+static gboolean selectTimeAnimation(gpointer fix)
 {
     static int lastStatus;
     static int presstime;
@@ -502,7 +510,7 @@ gboolean selectTimeAnimation(gpointer fix)
 
         gtk_widget_hide(selectTimewindwos);
         gtk_widget_show_all(paymentWindow);
-        g_timeout_add(16, paymentAnimation, payment_fixed);
+        changePage(3);
 
         selectData.selectTimeHour = ((status + 1) / 2) - 6;
         selectData.selectTimeMinute = ((status + 1) % 2) * 30;
@@ -519,7 +527,7 @@ gboolean selectTimeAnimation(gpointer fix)
     return TRUE;
 }
 
-gboolean paymentAnimation(gpointer fix)
+static gboolean paymentAnimation(gpointer fix)
 {
     static int lastSelections;
     static int presstime;
@@ -549,7 +557,7 @@ gboolean paymentAnimation(gpointer fix)
 
         gtk_widget_hide(paymentWindow);
         gtk_widget_show_all(confirmWindow);
-        g_timeout_add(16, confirmAnimation, confirm_fixed);
+        changePage(4);
         
         selectData.selectPayment = status % 4 > 1;
         
@@ -566,7 +574,7 @@ gboolean paymentAnimation(gpointer fix)
     return TRUE;
 }
 
-gboolean confirmAnimation(gpointer fix)
+static gboolean confirmAnimation(gpointer fix)
 {
     static int presstime;
     static int successCount;
@@ -606,7 +614,7 @@ gboolean confirmAnimation(gpointer fix)
 
         if(selectData.selectPayment && !connected) {
             gtk_image_set_from_file(GTK_IMAGE(connection_background), "image/5_1.png");
-            g_timeout_add(100, spinnerStart, connectionWindows);
+            changePage(5);
             gtk_widget_hide(confirmWindow);
             gtk_widget_show_all(connectionWindows);
             connected = 1;
@@ -628,7 +636,7 @@ gboolean confirmAnimation(gpointer fix)
         gtk_widget_hide(confirmWindow);
         gtk_widget_show(home);
         g_timeout_add(10, updateParkingData, (gpointer)0);
-        g_timeout_add(16, courseAnimation, home_fixed);
+        changePage(1);
         changedPayment = 1;
         return FALSE;
     }
@@ -641,7 +649,7 @@ gboolean confirmAnimation(gpointer fix)
         {
             connected = 2;
             gtk_image_set_from_file(GTK_IMAGE(connection_background), "image/5_3.png");
-            g_timeout_add(16, spinnerStart, connectionWindows);
+            changePage(5);
             gtk_widget_hide(confirmWindow);
             gtk_widget_show_all(connectionWindows);
             return FALSE;
@@ -709,7 +717,7 @@ gboolean spinnerAnimation(gpointer data)
     return FALSE;
 }
 
-gboolean spinnerStart(gpointer data)
+static gboolean spinnerStart(gpointer data)
 {
     static int skipTime = 0;
     gtk_widget_queue_draw(GTK_WIDGET(data));
@@ -718,10 +726,42 @@ gboolean spinnerStart(gpointer data)
     {
         gtk_widget_hide(connectionWindows);
         gtk_widget_show(confirmWindow);
-        g_timeout_add(16, confirmAnimation, NULL);
+        changePage(4);
         skipTime = 0;
         return FALSE;
     }
 
     return TRUE;
+}
+
+static void changePage(int page) {
+    switch (page)
+    {
+    case 0:
+        g_timeout_add(5, progressLoadingBar, loading_bar);
+        break;
+
+    case 1:
+        g_timeout_add(16, courseAnimation, home_fixed);
+        break;
+    
+    case 2:
+        g_timeout_add(16, selectTimeAnimation, select_fixed);
+        break;
+
+    case 3:
+        g_timeout_add(16, paymentAnimation, payment_fixed);
+        break;
+
+    case 4:
+        g_timeout_add(16, confirmAnimation, confirm_fixed);
+        break;
+
+    case 5:
+        g_timeout_add(16, spinnerStart, connectionWindows);
+        break;
+    
+    default:
+        break;
+    }
 }
