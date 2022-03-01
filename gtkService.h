@@ -77,19 +77,11 @@ void showDeadline(ParkingData*);
 
 gboolean courseAnimation(gpointer);
 
-void homeAnimation(gbutton*, int);
-
 gboolean selectTimeAnimation(gpointer);
-
-void selectHoverOpacityAnimation(gbutton *, int );
 
 gboolean paymentAnimation(gpointer);
 
-void paymentOpacityAnimation(gbutton *,gbutton *, int);
-
 gboolean confirmAnimation(gpointer);
-
-void confirmOpacityAnimation(gbutton *, int);
 
 gboolean spinnerAnimation(gpointer);
 

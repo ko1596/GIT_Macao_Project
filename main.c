@@ -18,8 +18,8 @@ int main()
         
         if(buf == 1) {
             printf("------------付款狀態------------\n");
-            printf("1.付款成功\n");
-            printf("2.付款失敗\n");
+            printf("0.付款成功\n");
+            printf("1.付款失敗\n");
             scanf("%d", &buf);
             paySuccess = buf;
         }else if(buf == 2) {
