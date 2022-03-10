@@ -6,7 +6,8 @@ int main()
     int sb;
 
     pthread_create(&gtkThread, NULL, run, NULL);
-    pthread_create(&serialThread, NULL, UartLoop, NULL);
+    m0ServiceInit();
+    // pthread_create(&serialThread, NULL, UartLoop, NULL);
     
     while(1) {
         printf("------------功能選單------------\n");

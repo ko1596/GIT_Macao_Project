@@ -110,6 +110,19 @@ rescaleImage(GtkWidget *widget,
     g_object_unref(pixbuf); 
 }
 
+static gint findMaxArrayIndex(guint16 array[], gint array_size)
+{
+    gint maxIndex = 0;
+    guint16 maxValue = 0;
+    for (gint i = 0; i < array_size; i++)
+        if (array[i] > maxValue && array[i] < 60000)
+        {
+            maxValue = array[i];
+            maxIndex = i;
+        }
+    return maxIndex;
+}
+
 static gboolean progressLoadingBar(gpointer data)
 {
     static int progress;
@@ -145,14 +158,11 @@ static void opacityAnimation(gbutton *gb, gboolean hover) {
 }
 
 static gint getSelectBlock(){
-    static int index=-1;
-    // printf("M0_Status_Update[%x]&[%x]\n",M0_Status_Update, M0_DEV_UPDATE_ALPS);
-    if (M0_Status_Update & M0_DEV_UPDATE_ALPS){
-        index =  3 - M0_alps.key/6 +  M0_alps.key%6*4;
-        M0_Status_Update &= ~M0_DEV_UPDATE_ALPS;
-    }
-    
-    return index;
+    gint maxIndex = findMaxArrayIndex(block, 24);
+    if (SELECT_BLOCK(block[maxIndex]))
+        return maxIndex;
+    else
+        return -1;
 }
 
 static void showDeadline(ParkingData *data)
@@ -428,12 +438,10 @@ static gboolean courseAnimation(gpointer home_fixed)
         if (status == lastStatus)
         {
             presstime++;
-            if ((int)(568 * (float)presstime / SELECT_BUTTON_TIME) < 568)
-                rescaleImage(hoverAnimation.image, 
-                            home_hover_buffer, 
-                            (int)(568 * (float)presstime / SELECT_BUTTON_TIME), 
-                            40);
-            // printf("Press time %d\n", (int)(568 * (float)presstime / SELECT_BUTTON_TIME));
+            rescaleImage(hoverAnimation.image, 
+                        home_hover_buffer, 
+                        (int)(568 * (float)presstime / SELECT_BUTTON_TIME), 
+                        40);
         }
         else
         {

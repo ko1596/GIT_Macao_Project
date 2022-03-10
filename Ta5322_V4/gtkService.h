@@ -1,7 +1,7 @@
 #ifndef GTKSERVICE_H
 #define GTKSERVICE_H
 
-#include "M0Service.h"
+#include "serialService.h"
 #include <gtk/gtk.h>
 #include <time.h>
 
@@ -9,7 +9,7 @@
 
 #define SELECT_BLOCK(x) ((x < 50000) && (x > 300))
 
-#define SELECT_BUTTON_TIME 30       //60 * 16 ~= 960ms
+#define SELECT_BUTTON_TIME 45       //60 * 16 ~= 960ms
 
 /** @defgroup ParkingStatus_group Defines Parking Status
  *  Defines all possible Status

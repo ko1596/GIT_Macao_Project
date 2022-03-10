@@ -1,0 +1,105 @@
+s
+ StrCmd-[s] 
+ **********  Set A53 to SLEEP MODE - mem  **********
+    $$$$$$$$$$  [echo mem > /sys/[  362.937539] PM: suspend entry (deep)
+power/state] 
+[  362.941378] PM: Syncing filesystems ... done.
+[  363.010543] Freezing user space processes ... (elapsed 0.001 seconds) done.
+[  363.019283] OOM killer disabled.
+[  363.022525] Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
+[  363.031291] Suspending console(s) (use no_console_suspend to debug)
+
+
+
+[  363.038278] wlan: Stoping AP
+[  363.048441] wlan: AP stopped
+[  363.112601] vhci_hcd vhci_hcd.0: suspend vhci_hcd
+[  363.115615] BT: suspend success! skip=0
+[  363.228693] PM: suspend devices took 0.192 seconds
+[  363.230993] Disabling non-boot CPUs ...
+[  363.246508] IRQ 6: no longer affine to CPU1
+[  363.246660] CPU1: shutdown
+[  363.246664] psci: CPU1 killed.
+[  363.270578] CPU2: shutdown
+[  363.270583] psci: CPU2 killed.
+[  363.294538] CPU3: shutdown
+[  363.294541] psci: CPU3 killed.
+[  363.294901] Enabling non-boot CPUs ...
+[  363.295068] Detected VIPT I-cache on CPU1
+[  363.295088] GICv3: CPU1: found redistributor 1 region 0:0x00000000388a0000
+[  363.295118] CPU1: Booted secondary processor [410fd034]
+[  363.295492]  cache: parent cpu1 should not be sleeping
+[  363.295614] CPU1 is up
+[  363.295726] Detected VIPT I-cache on CPU2
+[  363.295739] GICv3: CPU2: found redistributor 2 region 0:0x00000000388c0000
+[  363.295756] CPU2: Booted secondary processor [410fd034]
+[  363.296001]  cache: parent cpu2 should not be sleeping
+[  363.296105] CPU2 is up
+[  363.296245] Detected VIPT I-cache on CPU3
+[  363.296257] GICv3: CPU3: found redistributor 3 region 0:0x00000000388e0000
+[  363.296274] CPU3: Booted secondary processor [410fd034]
+[  363.296517]  cache: parent cpu3 should not be sleeping
+[  363.296626] CPU3 is up
+[  363.564711] imx-sgtl5000 sound: no-audmux specified, skipping audmux configuration
+[  363.564777] imx-sgtl5000 sound: failed to find SSI platform device
+[  363.564853] PM: resume devices took 0.264 seconds
+[  363.702584] OOM killer enabled.
+[  363.705723] Restarting tasks ... 
+[  363.706493] done.
+[  363.721319] PM: suspend entry (deep)
+[  363.724975] PM: suspend exit
+[  363.728496] PM: suspend exit
+    ##########  WakeUp WiFi AP : [systemctl restart hostapd] 
+[  364.019404] get_channel when AP is not started
+[  364.024227] get_channel when AP is not started
+[  364.029576] get_channel when AP is not started
+[  364.035045] get_channel when AP is not started
+[  364.041409] wlan: Starting AP
+[  364.057298] wlan: AP started
+[  364.061217] Set AC=3, txop=47 cwmin=3, cwmax=7 aifs=1
+[  364.069221] Set AC=2, txop=94 cwmin=7, cwmax=15 aifs=1
+[  364.076802] Set AC=0, txop=0 cwmin=15, cwmax=63 aifs=3
+[  364.084327] Set AC=1, txop=0 cwmin=15, cwmax=1023 aifs=7
+RxM0 MGC : [21-09-16 05:51:47]  M0_Status_Update[80001136] mgc[02]
+21-09-16 05:51:48	80001136	0045	3193	0018	02	8151	507	0067
+[  365.193117] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[  365.335959] fec 30be0000.ethernet eth0: Link is Up - 100Mbps/Full - flow control rx/tx
+[  365.343959] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+21-09-16 05:51:50	80001136	0045	3175	0018	02	8159	445	0068
+21-09-16 05:51:52	80001136	0051	3175	0014	02	8154	461	0069
+21-09-16 05:51:54	80001136	0051	3172	0026	02	8154	461	0070
+21-09-16 05:51:56	80001136	0053	3177	0026	02	8156	461	0071
+21-09-16 05:51:58	80001136	0046	3177	0019	02	8154	453	0072
+21-09-16 05:52:00	80001136	0046	3175	0018	02	8152	445	0073
+21-09-16 05:52:02	80001136	0046	3174	0018	02	8153	461	0074
+21-09-16 05:52:04	80001136	0046	3174	0019	02	8155	445	0075
+21-09-16 05:52:06	80001136	0046	3149	0019	02	8153	445	0076
+21-09-16 05:52:08	80001136	0047	3151	0019	02	8155	445	0077
+21-09-16 05:52:10	80001136	0046	3181	0019	02	8153	453	0078
+21-09-16 05:52:12	80001136	0052	3181	0021	02	8154	445	0079
+[  388.202860] wlan: EVENT: MICRO_AP_STA_ASSOC f4:XX:XX:XX:52:2a
+21-09-16 05:52:14	80001136	0052	3178	0018	02	8154	445	0080
+21-09-16 05:52:16	80001136	0047	3176	0018	02	8155	453	0081
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
