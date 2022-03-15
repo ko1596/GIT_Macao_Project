@@ -1,6 +1,26 @@
 #include "gtkService.h"
 
+typedef struct _gbutton {
+    GtkWidget *image;
+    double opacity;
+} gbutton;
 
+typedef struct _ParkingData {
+    GtkWidget *image;
+    GtkWidget *timeLabel;
+    GtkWidget *parkNumLabel;
+
+    ParkingStatus parkingStatus;
+    time_t deadline;
+    gint parkNum;
+} ParkingData;
+
+typedef struct _SelectData {
+    gint selectBlockNum;
+    gint selectTimeHour;
+    gint selectTimeMinute;
+    gint selectPayment;
+} SelectData;
 
 static GtkWidget *home;
 static GtkWidget *home_fixed;
@@ -114,7 +134,7 @@ static gboolean progressLoadingBar(gpointer data)
 {
     static int progress;
     progress++;
-    gtk_image_set_from_file(GTK_IMAGE(data), "image/loading_bar.png");
+    gtk_image_set_from_file(GTK_IMAGE(data), "/home/root/smart_city/image/loading_bar.png");
     rescaleImage(GTK_WIDGET(data), home_loading_bar_buffer, progress, 45);
     gtk_widget_show(GTK_WIDGET(data));
     gtk_widget_show(GTK_WIDGET(mask));
@@ -202,20 +222,20 @@ static gboolean updateParkingData(gpointer data)
             break;
 
         case PARKING_STATUS_DEADLINE:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/deadline.png");
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/smart_city/image/deadline.png");
             gtk_widget_show(parkingData[i].image);
             showDeadline(&parkingData[i]);
             gtk_widget_show(parkingData[i].timeLabel);
             break;
 
         case PARKING_STATUS_EXPIRED:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/expired.png");
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/smart_city/image/expired.png");
             gtk_widget_show(parkingData[i].image);
             gtk_widget_hide(parkingData[i].timeLabel);
             break;
 
         case PARKING_STATUS_PAYMENT:
-            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "image/payment.png");
+            gtk_image_set_from_file(GTK_IMAGE(parkingData[i].image), "/home/root/smart_city/image/payment.png");
             gtk_widget_show(parkingData[i].image);
             gtk_widget_hide(parkingData[i].timeLabel);
             break;
@@ -226,6 +246,32 @@ static gboolean updateParkingData(gpointer data)
     }
     g_free(timestamp);
     return GPOINTER_TO_INT(data);
+}
+
+static gboolean spinnerAnimation(gpointer data)
+{
+    static int ratio;
+    GdkWindow *gwindow = gtk_widget_get_window(GTK_WIDGET(data));
+
+    cairo_region_t *cairoRegion = cairo_region_create();
+
+    GdkDrawingContext *drawingContext;
+    drawingContext = gdk_window_begin_draw_frame(gwindow, cairoRegion);
+
+    cairo_t *cr = gdk_drawing_context_get_cairo_context(drawingContext);
+
+    cairo_translate(cr, 95 / 2, 95 / 2);
+    cairo_rotate(cr, ratio * M_PI / 180);
+    cairo_translate(cr, -0.5 * 95, -0.5 * 95);
+
+    cairo_set_source_surface(cr, spinnerImage, 0, 0);
+    cairo_paint(cr);
+
+    gdk_window_end_draw_frame(gwindow, drawingContext);
+    cairo_region_destroy(cairoRegion);
+
+    ratio += 5;
+    return FALSE;
 }
 
 void *run(void *data)
@@ -243,16 +289,16 @@ void *run(void *data)
     home_fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(home), home_fixed);
 
-    home_background = gtk_image_new_from_file("image/1.png");
+    home_background = gtk_image_new_from_file("/home/root/smart_city/image/1.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), home_background, 0, 0);
 
-    hoverAnimation.image = gtk_image_new_from_file("image/hover.png");
+    hoverAnimation.image = gtk_image_new_from_file("/home/root/smart_city/image/hover.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), hoverAnimation.image, 0, 0);
-    home_hover_buffer = gdk_pixbuf_new_from_file("image/hover.png", NULL);
+    home_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/hover.png", NULL);
 
     for (int i = 0; i < 8; i++)
     {
-        parkingData[i].image = gtk_image_new_from_file("image/deadline.png");
+        parkingData[i].image = gtk_image_new_from_file("/home/root/smart_city/image/deadline.png");
         gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].image, (i / 4) * 600 + 240, (i % 4) * 270 + 60);
 
         parkingData[i].timeLabel = gtk_label_new(NULL);
@@ -266,16 +312,16 @@ void *run(void *data)
         gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].parkNumLabel, (i / 4) * 600 + 57, (i % 4) * 270 + 29);
     }
 
-    selectbutton.image = gtk_image_new_from_file("image/select.png");
+    selectbutton.image = gtk_image_new_from_file("/home/root/smart_city/image/select.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), selectbutton.image, 0, 0);
     
 
-    mask = gtk_image_new_from_file("image/loading_mask.png");
+    mask = gtk_image_new_from_file("/home/root/smart_city/image/loading_mask.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), mask, 0, 0);
 
-    loading_bar = gtk_image_new_from_file("image/loading_bar.png");
+    loading_bar = gtk_image_new_from_file("/home/root/smart_city/image/loading_bar.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), loading_bar, 143, 1205);
-    home_loading_bar_buffer = gdk_pixbuf_new_from_file("image/loading_bar.png", NULL);
+    home_loading_bar_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/loading_bar.png", NULL);
 
     home_clock_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(home_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
@@ -298,15 +344,15 @@ void *run(void *data)
     select_fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(selectTimewindwos), select_fixed);
 
-    select_background = gtk_image_new_from_file("image/2.png");
+    select_background = gtk_image_new_from_file("/home/root/smart_city/image/2.png");
     gtk_fixed_put(GTK_FIXED(select_fixed), select_background, 0, 0);
 
-    select_hover.image = gtk_image_new_from_file("image/select_time_hover.png");
+    select_hover.image = gtk_image_new_from_file("/home/root/smart_city/image/select_time_hover.png");
     gtk_fixed_put(GTK_FIXED(select_fixed), select_hover.image, 15, 800);
-    select_hover_buffer = gdk_pixbuf_new_from_file("image/select_time_hover.png", NULL);
+    select_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/select_time_hover.png", NULL);
     gtk_widget_set_opacity(select_hover.image, 0);
 
-    select_timer.image = gtk_image_new_from_file("image/select_time.png");
+    select_timer.image = gtk_image_new_from_file("/home/root/smart_city/image/select_time.png");
     gtk_fixed_put(GTK_FIXED(select_fixed), select_timer.image, 15, 800);
 
     select_label.image = gtk_label_new(NULL);
@@ -329,19 +375,19 @@ void *run(void *data)
     payment_fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(paymentWindow), payment_fixed);
 
-    payment_background = gtk_image_new_from_file("image/3.png");
+    payment_background = gtk_image_new_from_file("/home/root/smart_city/image/3.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_background, 0, 0);
 
-    payment_hover.image = gtk_image_new_from_file("image/select_payment.png");
+    payment_hover.image = gtk_image_new_from_file("/home/root/smart_city/image/select_payment.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_hover.image, 0, 750);
-    payment_hover_buffer = gdk_pixbuf_new_from_file("image/select_payment.png", NULL);
+    payment_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/select_payment.png", NULL);
 
-    payment_qrcode.image = gtk_image_new_from_file("image/payment_qrcode.png");
+    payment_qrcode.image = gtk_image_new_from_file("/home/root/smart_city/image/payment_qrcode.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_qrcode.image, 144, 809);
     gtk_widget_set_opacity(payment_qrcode.image, payment_qrcode.opacity);
     payment_qrcode.opacity = 0;
 
-    payment_card.image = gtk_image_new_from_file("image/payment_card.png");
+    payment_card.image = gtk_image_new_from_file("/home/root/smart_city/image/payment_card.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_card.image, 827, 814);
     payment_card.opacity = 0;
     gtk_widget_set_opacity(payment_card.image, payment_card.opacity);
@@ -359,7 +405,7 @@ void *run(void *data)
     confirm_fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(confirmWindow), confirm_fixed);
 
-    confirm_background = gtk_image_new_from_file("image/4.png");
+    confirm_background = gtk_image_new_from_file("/home/root/smart_city/image/4.png");
     gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_background, 0, 0);
 
     confirm_pay_label = gtk_label_new(NULL);
@@ -374,7 +420,7 @@ void *run(void *data)
     gtk_label_set_markup(GTK_LABEL(confirm_time_label), "<span font_desc='45' color='#000000'>1.5</span>");
     gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_time_label, 846, 1140);
 
-    confirm_home_button.image = gtk_image_new_from_file("image/home.png");
+    confirm_home_button.image = gtk_image_new_from_file("/home/root/smart_city/image/home.png");
     gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_home_button.image, 441, 1333);
 
     confirm_clock_label = gtk_label_new(NULL);
@@ -390,7 +436,7 @@ void *run(void *data)
     connection_fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(connectionWindows), connection_fixed);
 
-    connection_background = gtk_image_new_from_file("image/5_1.png");
+    connection_background = gtk_image_new_from_file("/home/root/smart_city/image/5_1.png");
     gtk_fixed_put(GTK_FIXED(connection_fixed), connection_background, 0, 0);
 
     // create the are we can draw in
@@ -399,7 +445,7 @@ void *run(void *data)
     gtk_widget_set_size_request(drawingArea, 95, 95);
     gtk_fixed_put(GTK_FIXED(connection_fixed), drawingArea, 550, 700);
 
-    spinnerImage = cairo_image_surface_create_from_png("image/spinner.png");
+    spinnerImage = cairo_image_surface_create_from_png("/home/root/smart_city/image/spinner.png");
 
     g_signal_connect(G_OBJECT(drawingArea), "draw", G_CALLBACK(spinnerAnimation), drawingArea);
 
@@ -572,9 +618,15 @@ static gboolean confirmAnimation(gpointer fix)
     static int successCount;
     static int connected;
     static int changedPayment = 1;
+    static int successTime = 0;
     int status = getSelectBlock();
-
     int money = 8 * selectData.selectTimeHour + 4 * selectData.selectTimeMinute / 30;
+
+    if(successTime == 312){
+        paySuccess = 0;
+    }
+    successTime++;
+    
 
     if (changedPayment)
     {
@@ -597,7 +649,7 @@ static gboolean confirmAnimation(gpointer fix)
 
 
         gtk_image_set_from_file(GTK_IMAGE(confirm_background), 
-                    selectData.selectPayment ? "image/5.png" : "image/4.png" );
+                    selectData.selectPayment ? "/home/root/smart_city/image/5.png" : "/home/root/smart_city/image/4.png" );
 
         int fix_y = selectData.selectPayment ? 549 : 1140;
         gtk_fixed_move(GTK_FIXED(fix), confirm_pay_label, 230, fix_y);
@@ -605,7 +657,7 @@ static gboolean confirmAnimation(gpointer fix)
         gtk_fixed_move(GTK_FIXED(fix), confirm_time_label, 846, fix_y);
 
         if(selectData.selectPayment && !connected) {
-            gtk_image_set_from_file(GTK_IMAGE(connection_background), "image/5_1.png");
+            gtk_image_set_from_file(GTK_IMAGE(connection_background), "/home/root/smart_city/image/5_1.png");
             changePage(5);
             gtk_widget_hide(confirmWindow);
             gtk_widget_show_all(connectionWindows);
@@ -630,17 +682,18 @@ static gboolean confirmAnimation(gpointer fix)
         g_timeout_add(10, updateParkingData, (gpointer)0);
         changePage(1);
         changedPayment = 1;
+        successTime = 0;
         return FALSE;
     }
 
     opacityAnimation(&confirm_home_button, status == 21 || status == 22);
 
-    if (paySuccess != 2)
+    if (paySuccess != 2 || successTime == 312)
     {
         if (connected == 1 && selectData.selectPayment)
         {
             connected = 2;
-            gtk_image_set_from_file(GTK_IMAGE(connection_background), "image/5_3.png");
+            gtk_image_set_from_file(GTK_IMAGE(connection_background), "/home/root/smart_city/image/5_3.png");
             changePage(5);
             gtk_widget_hide(confirmWindow);
             gtk_widget_show_all(connectionWindows);
@@ -655,7 +708,7 @@ static gboolean confirmAnimation(gpointer fix)
             page = paySuccess ? 2 : 1;
         
         gchar *text_buf = g_strdup_printf(
-            "image/%d_%d.png", selectData.selectPayment ? 5 : 4, page );
+            "/home/root/smart_city/image/%d_%d.png", selectData.selectPayment ? 5 : 4, page );
 
         gtk_image_set_from_file(GTK_IMAGE(confirm_background), text_buf);
 
@@ -683,31 +736,7 @@ static gboolean confirmAnimation(gpointer fix)
     return TRUE;
 }
 
-gboolean spinnerAnimation(gpointer data)
-{
-    static int ratio;
-    GdkWindow *gwindow = gtk_widget_get_window(GTK_WIDGET(data));
 
-    cairo_region_t *cairoRegion = cairo_region_create();
-
-    GdkDrawingContext *drawingContext;
-    drawingContext = gdk_window_begin_draw_frame(gwindow, cairoRegion);
-
-    cairo_t *cr = gdk_drawing_context_get_cairo_context(drawingContext);
-
-    cairo_translate(cr, 95 / 2, 95 / 2);
-    cairo_rotate(cr, ratio * M_PI / 180);
-    cairo_translate(cr, -0.5 * 95, -0.5 * 95);
-
-    cairo_set_source_surface(cr, spinnerImage, 0, 0);
-    cairo_paint(cr);
-
-    gdk_window_end_draw_frame(gwindow, drawingContext);
-    cairo_region_destroy(cairoRegion);
-
-    ratio += 5;
-    return FALSE;
-}
 
 static gboolean spinnerStart(gpointer data)
 {
