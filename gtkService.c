@@ -182,6 +182,11 @@ static void opacityAnimation(gbutton *gb, gboolean hover) {
     }
 }
 
+static void cleanOpacity(gbutton *gb) {
+    gb->opacity = 0;
+    gtk_widget_set_opacity(gb->image, gb->opacity);
+}
+
 static gint getSelectBlock(){
     static int index=-1;
     // printf("M0_Status_Update[%x]&[%x]\n",M0_Status_Update, M0_DEV_UPDATE_ALPS);
@@ -408,6 +413,7 @@ void *run(void *data)
     payment_hover.image = gtk_image_new_from_file("/home/root/smart_city/image/select_payment.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_hover.image, 0, 750);
     payment_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/select_payment.png", NULL);
+    rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
 
     payment_qrcode.image = gtk_image_new_from_file("/home/root/smart_city/image/payment_qrcode.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_qrcode.image, 144, 809);
@@ -501,10 +507,10 @@ static gboolean courseAnimation(gpointer home_fixed)
         if (status == lastStatus)
         {
             presstime++;
-            if ((int)(568 * (float)presstime / SELECT_BUTTON_TIME) < 568)
+            if ((int)(568 * (float)presstime / press_time) < 568)
                 rescaleImage(hoverAnimation.image, 
                             home_hover_buffer, 
-                            (int)(568 * (float)presstime / SELECT_BUTTON_TIME), 
+                            (int)(568 * (float)presstime / press_time), 
                             40);
             // printf("Press time %d\n", (int)(568 * (float)presstime / SELECT_BUTTON_TIME));
         }
@@ -516,7 +522,7 @@ static gboolean courseAnimation(gpointer home_fixed)
         }
     }
 
-    if (presstime > SELECT_BUTTON_TIME)
+    if (presstime > press_time)
     {
         presstime = 0;
         if (parkingData[(status / 4) + ((status / 2) % 2 * 4)].parkingStatus == PARKING_STATUS_PAYMENT)
@@ -528,6 +534,8 @@ static gboolean courseAnimation(gpointer home_fixed)
             selectData.selectBlockNum = (status / 4) + ((status / 2) % 2 * 4);
             printf("select block [%d]\n", selectData.selectBlockNum);
             printf("Go to page 2\n");
+            cleanOpacity(&selectbutton);
+            cleanOpacity(&hoverAnimation);
             return FALSE;
         }
     }
@@ -553,7 +561,7 @@ static gboolean selectTimeAnimation(gpointer fix)
             if (status == lastStatus && countLoaded())
             {
                 presstime++;
-                rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / SELECT_BUTTON_TIME, 330);
+                rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / press_time, 330);
             }
             else
             {
@@ -570,7 +578,7 @@ static gboolean selectTimeAnimation(gpointer fix)
             }
         }
 
-        if (presstime > SELECT_BUTTON_TIME)
+        if (presstime > press_time)
         {
             presstime = 0;
 
@@ -584,6 +592,8 @@ static gboolean selectTimeAnimation(gpointer fix)
             printf("setting time %d : %d\n", selectData.selectTimeHour, selectData.selectTimeMinute);
             printf("Go to page 3\n");
             loaded = 0;
+            cleanOpacity(&select_hover);
+            cleanOpacity(&select_label);
             return FALSE;
         }
 
@@ -607,7 +617,7 @@ static gboolean paymentAnimation(gpointer fix)
             selections = !(status % 4 < 2);
             if(selections == lastSelections && countLoaded()) {
                 presstime++;
-                rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / SELECT_BUTTON_TIME, 535);
+                rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / press_time, 535);
             }else {
                 presstime = 0;
                 gtk_fixed_move(GTK_FIXED(fix), payment_hover.image, selections ? 600 : 0, 750);
@@ -620,7 +630,7 @@ static gboolean paymentAnimation(gpointer fix)
             presstime = 0;
         }
 
-        if (presstime == SELECT_BUTTON_TIME)
+        if (presstime == press_time)
         {
             presstime = 0;
 
@@ -633,6 +643,9 @@ static gboolean paymentAnimation(gpointer fix)
             printf("select payment %d\n", selectData.selectPayment);
             printf("Go to page 4\n");
             loaded = 0;
+            rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
+            cleanOpacity(&payment_qrcode);
+            cleanOpacity(&payment_card);
             return FALSE;
         }
 
@@ -706,7 +719,7 @@ static gboolean confirmAnimation(gpointer fix)
         else
             presstime = 0;
 
-        if (presstime > SELECT_BUTTON_TIME || successCount > 300)
+        if (presstime > press_time || successCount > 300)
         {
             presstime=0;
             successCount = 0;
