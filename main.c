@@ -1,10 +1,19 @@
+#include <stdlib.h>
 #include "gtkService.h"
 
-int main()
+int main(int argc, char **argv)
 {
-    int buf;
-    int sb;
+    // int buf;
+    // int sb;
+    int ret;
 
+    long arg = strtol(argv[1], NULL, 10);
+    long ar2 = strtol(argv[2], NULL, 10);
+    printf("\n%d\n%d\n",(int) arg, (int) ar2);
+    ret = settingFrameRate((int) arg);
+    if (ret != 0) return -1;
+    ret = settingHoverTime((int) ar2);
+    if (ret != 0) return -1;
     pthread_create(&gtkThread, NULL, run, NULL);
     m0ServiceInit();
 

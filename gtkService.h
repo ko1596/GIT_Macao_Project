@@ -7,7 +7,7 @@
 
 #define M_PI 3.141592653589793
 
-#define SELECT_BUTTON_TIME 30       //60 * 16 ~= 960ms
+#define SELECT_BUTTON_TIME 30       //SELECT_BUTTON_TIME * 16 ~= 960ms
 
 /** @defgroup ParkingStatus_group Defines Parking Status
  *  Defines all possible Status
@@ -33,6 +33,10 @@ pthread_t gtkThread;
 void changePaySuccess(int);
 
 void changeParingStatus(int, int);
+
+gint settingFrameRate(gint);
+
+gint settingHoverTime(gint);
 
 void* run(void*);
 

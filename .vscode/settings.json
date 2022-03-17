@@ -5,6 +5,7 @@
         "time.h": "c",
         "m0all_header.h": "c",
         "i2c-dev.h": "c",
-        "ioctl.h": "c"
+        "ioctl.h": "c",
+        "gtkservice.h": "c"
     }
 }

@@ -70,7 +70,12 @@ static GdkPixbuf *payment_hover_buffer;
 
 static cairo_surface_t *spinnerImage;
 
+static gint frame_rate;
+static gint press_time;
+
 static int paySuccess;
+
+static gint loaded = 0;
 
 static void changePage(int page);
 
@@ -80,14 +85,14 @@ void changePaySuccess(int status) {
 
 static void initBlockData() {
     struct tm *p;
-    parkingData[0].parkingStatus = 0;
-    parkingData[1].parkingStatus = 1;
-    parkingData[2].parkingStatus = 2;
+    parkingData[0].parkingStatus = 1;
+    parkingData[1].parkingStatus = 2;
+    parkingData[2].parkingStatus = 3;
     parkingData[3].parkingStatus = 3;
     parkingData[4].parkingStatus = 3;
-    parkingData[5].parkingStatus = 2;
-    parkingData[6].parkingStatus = 1;
-    parkingData[7].parkingStatus = 0;
+    parkingData[5].parkingStatus = 3;
+    parkingData[6].parkingStatus = 3;
+    parkingData[7].parkingStatus = 3;
 
     parkingData[0].parkNum = 21;
     parkingData[1].parkNum = 22;
@@ -98,20 +103,33 @@ static void initBlockData() {
     parkingData[6].parkNum = 27;
     parkingData[7].parkNum = 28;
 
-    parkingData[1].deadline = time(NULL);
-    p = localtime(&parkingData[1].deadline);
-    p->tm_hour+=2;
+    parkingData[0].deadline = time(NULL);
+    p = localtime(&parkingData[0].deadline);
+    p->tm_hour+=4;
     p->tm_min+=13;
-    parkingData[1].deadline = mktime(p); 
-
-    parkingData[6].deadline = time(NULL);
-    p = localtime(&parkingData[6].deadline);
-    p->tm_min+=1;
-    parkingData[6].deadline = mktime(p); 
+    parkingData[0].deadline = mktime(p);
 }
 
 void changeParingStatus(int blockNum, int status) {
     parkingData[blockNum].parkingStatus = status;
+}
+
+gint settingFrameRate(gint _frame_rate) {
+    if (_frame_rate == 0) {
+        printf("_frame_rate is NULL!\nPlease follow the arguments input rules\nex:[./diplay_MO_test [Frame rate] [Press time]\n");
+        return -1;
+    }
+    else frame_rate = 1000/_frame_rate;
+    return 0;
+}
+
+gint settingHoverTime(gint _press_time) {
+    if (_press_time == 0) {
+        printf("_press_time is NULL!\nPlease follow the arguments input rules\nex:[./diplay_MO_test [Frame rate] [Press time]\n");
+        return -1;
+    }
+    else press_time = _press_time/frame_rate;
+    return 0;
 }
 
 static void 
@@ -271,6 +289,15 @@ static gboolean spinnerAnimation(gpointer data)
     cairo_region_destroy(cairoRegion);
 
     ratio += 5;
+    return FALSE;
+}
+
+static gboolean countLoaded(void) {
+    if (loaded < 125)
+        loaded++;
+    else
+        return TRUE;
+
     return FALSE;
 }
 
@@ -520,47 +547,51 @@ static gboolean selectTimeAnimation(gpointer fix)
     int selectBlockX = 15 + (296 * (status % 4));
     int selectBlockY = 800 + (315 * ((status - 12) / 4));
 
-    if (status > 11 && status < 20)
-    {
-        if (status == lastStatus)
+    if (countLoaded()){
+        if (status > 11 && status < 20)
         {
-            presstime++;
-            rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / SELECT_BUTTON_TIME, 330);
+            if (status == lastStatus && countLoaded())
+            {
+                presstime++;
+                rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / SELECT_BUTTON_TIME, 330);
+            }
+            else
+            {
+                presstime = 0;
+
+                gtk_fixed_move(GTK_FIXED(fix), select_timer.image, selectBlockX, selectBlockY);
+                gtk_fixed_move(GTK_FIXED(fix), select_hover.image, selectBlockX - 14, selectBlockY - 14);
+                gtk_fixed_move(GTK_FIXED(fix), select_label.image, selectBlockX + 50, selectBlockY + 95);
+
+                gchar *text_time = g_strdup_printf(
+                    "<span font_desc='65' color='#FFFFFF' weight='bold'>%d:%02d</span>", ((status + 1) / 2) - 6, ((status + 1) % 2) * 30);
+
+                gtk_label_set_markup(GTK_LABEL(select_label.image), text_time);
+            }
         }
-        else
+
+        if (presstime > SELECT_BUTTON_TIME)
         {
             presstime = 0;
 
-            gtk_fixed_move(GTK_FIXED(fix), select_timer.image, selectBlockX, selectBlockY);
-            gtk_fixed_move(GTK_FIXED(fix), select_hover.image, selectBlockX - 14, selectBlockY - 14);
-            gtk_fixed_move(GTK_FIXED(fix), select_label.image, selectBlockX + 50, selectBlockY + 95);
+            gtk_widget_hide(selectTimewindwos);
+            gtk_widget_show_all(paymentWindow);
+            changePage(3);
 
-            gchar *text_time = g_strdup_printf(
-                "<span font_desc='65' color='#FFFFFF' weight='bold'>%d:%02d</span>", ((status + 1) / 2) - 6, ((status + 1) % 2) * 30);
+            selectData.selectTimeHour = ((status + 1) / 2) - 6;
+            selectData.selectTimeMinute = ((status + 1) % 2) * 30;
 
-            gtk_label_set_markup(GTK_LABEL(select_label.image), text_time);
+            printf("setting time %d : %d\n", selectData.selectTimeHour, selectData.selectTimeMinute);
+            printf("Go to page 3\n");
+            loaded = 0;
+            return FALSE;
         }
+
+        opacityAnimation(&select_hover, status > 11 && status < 20);
+        opacityAnimation(&select_label, status > 11 && status < 20);
+        lastStatus = status;
     }
-
-    if (presstime > SELECT_BUTTON_TIME)
-    {
-        presstime = 0;
-
-        gtk_widget_hide(selectTimewindwos);
-        gtk_widget_show_all(paymentWindow);
-        changePage(3);
-
-        selectData.selectTimeHour = ((status + 1) / 2) - 6;
-        selectData.selectTimeMinute = ((status + 1) % 2) * 30;
-
-        printf("setting time %d : %d\n", selectData.selectTimeHour, selectData.selectTimeMinute);
-        printf("Go to page 3\n");
-        return FALSE;
-    }
-
-    opacityAnimation(&select_hover, status > 11 && status < 20);
-    opacityAnimation(&select_label, status > 11 && status < 20);
-    lastStatus = status;
+    
 
     return TRUE;
 }
@@ -571,43 +602,46 @@ static gboolean paymentAnimation(gpointer fix)
     static int presstime;
     static int selections;
     int status = getSelectBlock();
-
-    if (status > 11 && status < 20) {
-        selections = !(status % 4 < 2);
-        if(selections == lastSelections) {
-            presstime++;
-            rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / SELECT_BUTTON_TIME, 535);
+    if (countLoaded()){
+        if (status > 11 && status < 20) {
+            selections = !(status % 4 < 2);
+            if(selections == lastSelections && countLoaded()) {
+                presstime++;
+                rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / SELECT_BUTTON_TIME, 535);
+            }else {
+                presstime = 0;
+                gtk_fixed_move(GTK_FIXED(fix), payment_hover.image, selections ? 600 : 0, 750);
+                rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
+            }
         }else {
+            selections = 2;
+            if(selections != lastSelections)
+                rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
             presstime = 0;
-            gtk_fixed_move(GTK_FIXED(fix), payment_hover.image, selections ? 600 : 0, 750);
-            rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
         }
-    }else {
-        selections = 2;
-        if(selections != lastSelections)
-            rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
-        presstime = 0;
+
+        if (presstime == SELECT_BUTTON_TIME)
+        {
+            presstime = 0;
+
+            gtk_widget_hide(paymentWindow);
+            gtk_widget_show_all(confirmWindow);
+            changePage(4);
+            
+            selectData.selectPayment = status % 4 > 1;
+            
+            printf("select payment %d\n", selectData.selectPayment);
+            printf("Go to page 4\n");
+            loaded = 0;
+            return FALSE;
+        }
+
+        opacityAnimation(&payment_qrcode, selections == 0);
+        opacityAnimation(&payment_card, selections == 1);
+
+        lastSelections = selections;
     }
 
-    if (presstime == SELECT_BUTTON_TIME)
-    {
-        presstime = 0;
-
-        gtk_widget_hide(paymentWindow);
-        gtk_widget_show_all(confirmWindow);
-        changePage(4);
-        
-        selectData.selectPayment = status % 4 > 1;
-        
-        printf("select payment %d\n", selectData.selectPayment);
-        printf("Go to page 4\n");
-        return FALSE;
-    }
-
-    opacityAnimation(&payment_qrcode, selections == 0);
-    opacityAnimation(&payment_card, selections == 1);
-
-    lastSelections = selections;
 
     return TRUE;
 }
@@ -626,7 +660,7 @@ static gboolean confirmAnimation(gpointer fix)
         paySuccess = 0;
     }
     successTime++;
-    
+
 
     if (changedPayment)
     {
@@ -651,7 +685,7 @@ static gboolean confirmAnimation(gpointer fix)
         gtk_image_set_from_file(GTK_IMAGE(confirm_background), 
                     selectData.selectPayment ? "/home/root/smart_city/image/5.png" : "/home/root/smart_city/image/4.png" );
 
-        int fix_y = selectData.selectPayment ? 549 : 1140;
+        int fix_y = selectData.selectPayment ? 560 : 1140;
         gtk_fixed_move(GTK_FIXED(fix), confirm_pay_label, 230, fix_y);
         gtk_fixed_move(GTK_FIXED(fix), confirm_park_label, 544, fix_y);
         gtk_fixed_move(GTK_FIXED(fix), confirm_time_label, 846, fix_y);
@@ -666,27 +700,30 @@ static gboolean confirmAnimation(gpointer fix)
         }
         
     }
+    if (countLoaded()){
+        if ((status == 21 || status == 22) && countLoaded())
+            presstime++;
+        else
+            presstime = 0;
 
-    if (status == 21 || status == 22)
-        presstime++;
-    else
-        presstime = 0;
+        if (presstime > SELECT_BUTTON_TIME || successCount > 300)
+        {
+            presstime=0;
+            successCount = 0;
+            connected = 0;
+            gtk_widget_hide(confirmWindow);
+            gtk_widget_show(home);
+            g_timeout_add(10, updateParkingData, (gpointer)0);
+            changePage(1);
+            changedPayment = 1;
+            successTime = 0;
+            loaded = 0;
+            return FALSE;
+        }
 
-    if (presstime > SELECT_BUTTON_TIME || successCount > 300)
-    {
-        presstime=0;
-        successCount = 0;
-        connected = 0;
-        gtk_widget_hide(confirmWindow);
-        gtk_widget_show(home);
-        g_timeout_add(10, updateParkingData, (gpointer)0);
-        changePage(1);
-        changedPayment = 1;
-        successTime = 0;
-        return FALSE;
+        opacityAnimation(&confirm_home_button, status == 21 || status == 22);
     }
-
-    opacityAnimation(&confirm_home_button, status == 21 || status == 22);
+    
 
     if (paySuccess != 2 || successTime == 312)
     {
@@ -763,23 +800,23 @@ static void changePage(int page) {
         break;
 
     case 1:
-        g_timeout_add(16, courseAnimation, home_fixed);
+        g_timeout_add(frame_rate, courseAnimation, home_fixed);
         break;
     
     case 2:
-        g_timeout_add(16, selectTimeAnimation, select_fixed);
+        g_timeout_add(frame_rate, selectTimeAnimation, select_fixed);
         break;
 
     case 3:
-        g_timeout_add(16, paymentAnimation, payment_fixed);
+        g_timeout_add(frame_rate, paymentAnimation, payment_fixed);
         break;
 
     case 4:
-        g_timeout_add(16, confirmAnimation, confirm_fixed);
+        g_timeout_add(frame_rate, confirmAnimation, confirm_fixed);
         break;
 
     case 5:
-        g_timeout_add(16, spinnerStart, connectionWindows);
+        g_timeout_add(frame_rate, spinnerStart, connectionWindows);
         break;
     
     default:
