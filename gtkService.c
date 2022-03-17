@@ -109,6 +109,11 @@ static void initBlockData() {
     p->tm_min+=13;
     parkingData[0].deadline = mktime(p);
 }
+static gboolean resetParkingData(gpointer data) {
+    initBlockData();
+    return GPOINTER_TO_INT(data);
+}
+
 
 void changeParingStatus(int blockNum, int status) {
     parkingData[blockNum].parkingStatus = status;
@@ -298,7 +303,7 @@ static gboolean spinnerAnimation(gpointer data)
 }
 
 static gboolean countLoaded(void) {
-    if (loaded < 125)
+    if (loaded < 94)
         loaded++;
     else
         return TRUE;
@@ -359,6 +364,7 @@ void *run(void *data)
     gtk_label_set_markup(GTK_LABEL(home_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
     gtk_fixed_put(GTK_FIXED(home_fixed), home_clock_label, 0, 1510);
 
+    g_timeout_add(180000, resetParkingData, (gpointer)1);
     g_timeout_add(60000, updateParkingData, (gpointer)1);
     changePage(0);
 
@@ -455,6 +461,7 @@ void *run(void *data)
 
     confirm_home_button.image = gtk_image_new_from_file("/home/root/smart_city/image/home.png");
     gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_home_button.image, 441, 1333);
+    cleanOpacity(&confirm_home_button);
 
     confirm_clock_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(confirm_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
@@ -512,7 +519,7 @@ static gboolean courseAnimation(gpointer home_fixed)
                             home_hover_buffer, 
                             (int)(568 * (float)presstime / press_time), 
                             40);
-            // printf("Press time %d\n", (int)(568 * (float)presstime / SELECT_BUTTON_TIME));
+            // printf("Press time %d\n", (int)(568 * (float)presstime / press_time));
         }
         else
         {
@@ -522,7 +529,7 @@ static gboolean courseAnimation(gpointer home_fixed)
         }
     }
 
-    if (presstime > press_time)
+    if (presstime >= press_time)
     {
         presstime = 0;
         if (parkingData[(status / 4) + ((status / 2) % 2 * 4)].parkingStatus == PARKING_STATUS_PAYMENT)
@@ -561,7 +568,8 @@ static gboolean selectTimeAnimation(gpointer fix)
             if (status == lastStatus && countLoaded())
             {
                 presstime++;
-                rescaleImage(select_hover.image, select_hover_buffer, 310 * presstime / press_time, 330);
+                rescaleImage(select_hover.image, select_hover_buffer, 310 * (float)presstime / press_time, 330);
+                // printf("Press time %d\n", (int)((float)(presstime / press_time)));
             }
             else
             {
@@ -578,7 +586,7 @@ static gboolean selectTimeAnimation(gpointer fix)
             }
         }
 
-        if (presstime > press_time)
+        if (presstime >= press_time)
         {
             presstime = 0;
 
@@ -630,7 +638,7 @@ static gboolean paymentAnimation(gpointer fix)
             presstime = 0;
         }
 
-        if (presstime == press_time)
+        if (presstime >= press_time)
         {
             presstime = 0;
 
@@ -719,7 +727,7 @@ static gboolean confirmAnimation(gpointer fix)
         else
             presstime = 0;
 
-        if (presstime > press_time || successCount > 300)
+        if (presstime >= press_time || successCount > 300)
         {
             presstime=0;
             successCount = 0;
@@ -731,6 +739,7 @@ static gboolean confirmAnimation(gpointer fix)
             changedPayment = 1;
             successTime = 0;
             loaded = 0;
+            cleanOpacity(&confirm_home_button);
             return FALSE;
         }
 
