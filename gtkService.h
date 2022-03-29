@@ -5,6 +5,18 @@
 #include <gtk/gtk.h>
 #include <time.h>
 
+#define IDENT(x) x
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
+
+#define PATH(k) STR(IDENT(Dir)IDENT(k)IDENT(File))
+ 
+#define Dir image/    \
+
+#define Dir2 /home/root/grids/disp_patterns/disp_mo/    \
+
+#define File .png
+
 #define M_PI 3.141592653589793
 
 #define SELECT_BUTTON_TIME 30       //SELECT_BUTTON_TIME * 16 ~= 960ms
