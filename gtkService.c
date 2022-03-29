@@ -1,10 +1,5 @@
 #include "gtkService.h"
 
-typedef struct _gbutton {
-    GtkWidget *image;
-    double opacity;
-} gbutton;
-
 typedef struct _ParkingData {
     GtkWidget *image;
     GtkWidget *timeLabel;
@@ -27,24 +22,26 @@ static GtkWidget *home_fixed;
 static GtkWidget *home_background;
 static GtkWidget *mask;
 static GtkWidget *loading_bar;
-static gbutton selectbutton;
-static gbutton hoverAnimation;
+static GtkWidget *selectbutton;
+static GtkWidget *hoverAnimation;
 static GtkWidget *home_clock_label;
 
 static GtkWidget *selectTimewindwos;
 static GtkWidget *select_fixed;
 static GtkWidget *select_background;
-static gbutton select_timer;
-static gbutton select_hover;
-static gbutton select_label;
+static GtkWidget *select_timer;
+static GtkWidget *select_hover;
+static GtkWidget *select_label;
+static GtkWidget *select_parking_space_label;
+static GtkWidget *select_parking_time_label;
 static GtkWidget *select_clock_label;
 
 static GtkWidget *paymentWindow;
 static GtkWidget *payment_fixed;
 static GtkWidget *payment_background;
-static gbutton payment_hover;
-static gbutton payment_card;
-static gbutton payment_qrcode;
+static GtkWidget *payment_hover;
+static GtkWidget *payment_card;
+static GtkWidget *payment_qrcode;
 static GtkWidget *payment_clock_label;
 
 static GtkWidget *confirmWindow;
@@ -54,7 +51,7 @@ static GtkWidget *confirm_pay_label;
 static GtkWidget *confirm_park_label;
 static GtkWidget *confirm_time_label;
 static GtkWidget *confirm_clock_label;
-static gbutton confirm_home_button;
+static GtkWidget *confirm_home_button;
 
 static GtkWidget *connectionWindows;
 static GtkWidget *connection_fixed;
@@ -174,22 +171,19 @@ static gboolean progressLoadingBar(gpointer data)
     }
 }
 
-static void opacityAnimation(gbutton *gb, gboolean hover) {
-    if (hover && gb->opacity < 1)
+static void opacityAnimation(GtkWidget *widget, gboolean hover) {
+    if (hover && gtk_widget_get_opacity(widget) < 1)
     {
-        gb->opacity += 0.05;
-        gtk_widget_set_opacity(gb->image, gb->opacity);
+        gtk_widget_set_opacity(widget, gtk_widget_get_opacity(widget) + 0.5);
     }
-    else if (!hover && gb->opacity > 0)
+    else if (!hover && gtk_widget_get_opacity(widget) > 0)
     {
-        gb->opacity -= 0.05;
-        gtk_widget_set_opacity(gb->image, gb->opacity);
+        gtk_widget_set_opacity(widget, gtk_widget_get_opacity(widget) - 0.5);
     }
 }
 
-static void cleanOpacity(gbutton *gb) {
-    gb->opacity = 0;
-    gtk_widget_set_opacity(gb->image, gb->opacity);
+static void cleanOpacity(GtkWidget *widget) {
+    gtk_widget_set_opacity(widget, 0.0);
 }
 
 static gint getSelectBlock(){
@@ -329,8 +323,8 @@ void *run(void *data)
     home_background = gtk_image_new_from_file("/home/root/smart_city/image/1.png");
     gtk_fixed_put(GTK_FIXED(home_fixed), home_background, 0, 0);
 
-    hoverAnimation.image = gtk_image_new_from_file("/home/root/smart_city/image/hover.png");
-    gtk_fixed_put(GTK_FIXED(home_fixed), hoverAnimation.image, 0, 0);
+    hoverAnimation = gtk_image_new_from_file("/home/root/smart_city/image/hover.png");
+    gtk_fixed_put(GTK_FIXED(home_fixed), hoverAnimation, 0, 0);
     home_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/hover.png", NULL);
 
     for (int i = 0; i < 8; i++)
@@ -349,8 +343,8 @@ void *run(void *data)
         gtk_fixed_put(GTK_FIXED(home_fixed), parkingData[i].parkNumLabel, (i / 4) * 600 + 57, (i % 4) * 270 + 29);
     }
 
-    selectbutton.image = gtk_image_new_from_file("/home/root/smart_city/image/select.png");
-    gtk_fixed_put(GTK_FIXED(home_fixed), selectbutton.image, 0, 0);
+    selectbutton = gtk_image_new_from_file("/home/root/smart_city/image/select.png");
+    gtk_fixed_put(GTK_FIXED(home_fixed), selectbutton, 0, 0);
     
 
     mask = gtk_image_new_from_file("/home/root/smart_city/image/loading_mask.png");
@@ -370,11 +364,8 @@ void *run(void *data)
 
     gtk_widget_show_all(home);
 
-    selectbutton.opacity = 0;
-    gtk_widget_set_opacity(selectbutton.image, selectbutton.opacity);
-
-    hoverAnimation.opacity = 0;
-    gtk_widget_set_opacity(hoverAnimation.image, hoverAnimation.opacity);
+    cleanOpacity(selectbutton);
+    cleanOpacity(hoverAnimation);
 
     selectTimewindwos = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_fullscreen(GTK_WINDOW(selectTimewindwos));
@@ -385,19 +376,21 @@ void *run(void *data)
     select_background = gtk_image_new_from_file("/home/root/smart_city/image/2.png");
     gtk_fixed_put(GTK_FIXED(select_fixed), select_background, 0, 0);
 
-    select_hover.image = gtk_image_new_from_file("/home/root/smart_city/image/select_time_hover.png");
-    gtk_fixed_put(GTK_FIXED(select_fixed), select_hover.image, 15, 800);
+    select_hover = gtk_image_new_from_file("/home/root/smart_city/image/select_time_hover.png");
+    gtk_fixed_put(GTK_FIXED(select_fixed), select_hover, 15, 800);
     select_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/select_time_hover.png", NULL);
-    gtk_widget_set_opacity(select_hover.image, 0);
+    gtk_widget_set_opacity(select_hover, 0);
 
-    select_timer.image = gtk_image_new_from_file("/home/root/smart_city/image/select_time.png");
-    gtk_fixed_put(GTK_FIXED(select_fixed), select_timer.image, 15, 800);
+    select_timer = gtk_image_new_from_file("/home/root/smart_city/image/select_time.png");
+    gtk_fixed_put(GTK_FIXED(select_fixed), select_timer, 15, 800);
 
-    select_label.image = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(select_label.image), "<span font_desc='65' color='#FFFFFF' weight='bold'>00:00</span>");
-    gtk_fixed_put(GTK_FIXED(select_fixed), select_label.image, 50, 895);
-    select_label.opacity = 0;
-    gtk_widget_set_opacity(select_label.image, select_label.opacity);
+    select_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(select_label), "<span font_desc='65' color='#FFFFFF' weight='bold'>00:00</span>");
+    gtk_fixed_put(GTK_FIXED(select_fixed), select_label, 50, 895);
+
+    cleanOpacity(select_label);
+
+    select_parking_space_label = gtk_label_new(NULL);
 
     select_clock_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(select_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
@@ -416,20 +409,20 @@ void *run(void *data)
     payment_background = gtk_image_new_from_file("/home/root/smart_city/image/3.png");
     gtk_fixed_put(GTK_FIXED(payment_fixed), payment_background, 0, 0);
 
-    payment_hover.image = gtk_image_new_from_file("/home/root/smart_city/image/select_payment.png");
-    gtk_fixed_put(GTK_FIXED(payment_fixed), payment_hover.image, 0, 750);
+    payment_hover = gtk_image_new_from_file("/home/root/smart_city/image/select_payment.png");
+    gtk_fixed_put(GTK_FIXED(payment_fixed), payment_hover, 0, 750);
     payment_hover_buffer = gdk_pixbuf_new_from_file("/home/root/smart_city/image/select_payment.png", NULL);
-    rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
+    rescaleImage(payment_hover, payment_hover_buffer, 1, 535);
 
-    payment_qrcode.image = gtk_image_new_from_file("/home/root/smart_city/image/payment_qrcode.png");
-    gtk_fixed_put(GTK_FIXED(payment_fixed), payment_qrcode.image, 144, 809);
-    gtk_widget_set_opacity(payment_qrcode.image, payment_qrcode.opacity);
-    payment_qrcode.opacity = 0;
+    payment_qrcode = gtk_image_new_from_file("/home/root/smart_city/image/payment_qrcode.png");
+    gtk_fixed_put(GTK_FIXED(payment_fixed), payment_qrcode, 144, 809);
 
-    payment_card.image = gtk_image_new_from_file("/home/root/smart_city/image/payment_card.png");
-    gtk_fixed_put(GTK_FIXED(payment_fixed), payment_card.image, 827, 814);
-    payment_card.opacity = 0;
-    gtk_widget_set_opacity(payment_card.image, payment_card.opacity);
+    cleanOpacity(payment_qrcode);
+
+    payment_card = gtk_image_new_from_file("/home/root/smart_city/image/payment_card.png");
+    gtk_fixed_put(GTK_FIXED(payment_fixed), payment_card, 827, 814);
+
+    cleanOpacity(payment_card);
 
     payment_clock_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(payment_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
@@ -459,9 +452,9 @@ void *run(void *data)
     gtk_label_set_markup(GTK_LABEL(confirm_time_label), "<span font_desc='45' color='#000000'>1.5</span>");
     gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_time_label, 846, 1140);
 
-    confirm_home_button.image = gtk_image_new_from_file("/home/root/smart_city/image/home.png");
-    gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_home_button.image, 441, 1333);
-    cleanOpacity(&confirm_home_button);
+    confirm_home_button = gtk_image_new_from_file("/home/root/smart_city/image/home.png");
+    gtk_fixed_put(GTK_FIXED(confirm_fixed), confirm_home_button, 441, 1333);
+    cleanOpacity(confirm_home_button);
 
     confirm_clock_label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(confirm_clock_label), "<span font_desc='50' color='#FFFFFF' weight='bold'>00:00</span>");
@@ -515,7 +508,7 @@ static gboolean courseAnimation(gpointer home_fixed)
         {
             presstime++;
             if ((int)(568 * (float)presstime / press_time) < 568)
-                rescaleImage(hoverAnimation.image, 
+                rescaleImage(hoverAnimation, 
                             home_hover_buffer, 
                             (int)(568 * (float)presstime / press_time), 
                             40);
@@ -524,8 +517,8 @@ static gboolean courseAnimation(gpointer home_fixed)
         else
         {
             presstime = 0;
-            gtk_fixed_move(GTK_FIXED(home_fixed), selectbutton.image, selectBlockX, selectBlockY);
-            gtk_fixed_move(GTK_FIXED(home_fixed), hoverAnimation.image, selectBlockX, selectBlockY);
+            gtk_fixed_move(GTK_FIXED(home_fixed), selectbutton, selectBlockX, selectBlockY);
+            gtk_fixed_move(GTK_FIXED(home_fixed), hoverAnimation, selectBlockX, selectBlockY);
         }
     }
 
@@ -541,13 +534,13 @@ static gboolean courseAnimation(gpointer home_fixed)
             selectData.selectBlockNum = (status / 4) + ((status / 2) % 2 * 4);
             printf("select block [%d]\n", selectData.selectBlockNum);
             printf("Go to page 2\n");
-            cleanOpacity(&selectbutton);
-            cleanOpacity(&hoverAnimation);
+            cleanOpacity(selectbutton);
+            cleanOpacity(hoverAnimation);
             return FALSE;
         }
     }
-    opacityAnimation(&selectbutton, status > -1 && status < 16);
-    opacityAnimation(&hoverAnimation, status > -1 && status < 16);
+    opacityAnimation(selectbutton, status > -1 && status < 16);
+    opacityAnimation(hoverAnimation, status > -1 && status < 16);
 
     lastStatus = status;
 
@@ -568,21 +561,21 @@ static gboolean selectTimeAnimation(gpointer fix)
             if (status == lastStatus && countLoaded())
             {
                 presstime++;
-                rescaleImage(select_hover.image, select_hover_buffer, 310 * (float)presstime / press_time, 330);
+                rescaleImage(select_hover, select_hover_buffer, 310 * (float)presstime / press_time, 330);
                 // printf("Press time %d\n", (int)((float)(presstime / press_time)));
             }
             else
             {
                 presstime = 0;
 
-                gtk_fixed_move(GTK_FIXED(fix), select_timer.image, selectBlockX, selectBlockY);
-                gtk_fixed_move(GTK_FIXED(fix), select_hover.image, selectBlockX - 14, selectBlockY - 14);
-                gtk_fixed_move(GTK_FIXED(fix), select_label.image, selectBlockX + 50, selectBlockY + 95);
+                gtk_fixed_move(GTK_FIXED(fix), select_timer, selectBlockX, selectBlockY);
+                gtk_fixed_move(GTK_FIXED(fix), select_hover, selectBlockX - 14, selectBlockY - 14);
+                gtk_fixed_move(GTK_FIXED(fix), select_label, selectBlockX + 50, selectBlockY + 95);
 
                 gchar *text_time = g_strdup_printf(
                     "<span font_desc='65' color='#FFFFFF' weight='bold'>%d:%02d</span>", ((status + 1) / 2) - 6, ((status + 1) % 2) * 30);
 
-                gtk_label_set_markup(GTK_LABEL(select_label.image), text_time);
+                gtk_label_set_markup(GTK_LABEL(select_label), text_time);
             }
         }
 
@@ -600,13 +593,13 @@ static gboolean selectTimeAnimation(gpointer fix)
             printf("setting time %d : %d\n", selectData.selectTimeHour, selectData.selectTimeMinute);
             printf("Go to page 3\n");
             loaded = 0;
-            cleanOpacity(&select_hover);
-            cleanOpacity(&select_label);
+            cleanOpacity(select_hover);
+            cleanOpacity(select_label);
             return FALSE;
         }
 
-        opacityAnimation(&select_hover, status > 11 && status < 20);
-        opacityAnimation(&select_label, status > 11 && status < 20);
+        opacityAnimation(select_hover, status > 11 && status < 20);
+        opacityAnimation(select_label, status > 11 && status < 20);
         lastStatus = status;
     }
     
@@ -625,16 +618,16 @@ static gboolean paymentAnimation(gpointer fix)
             selections = !(status % 4 < 2);
             if(selections == lastSelections && countLoaded()) {
                 presstime++;
-                rescaleImage(payment_hover.image, payment_hover_buffer, 600 * presstime / press_time, 535);
+                rescaleImage(payment_hover, payment_hover_buffer, 600 * presstime / press_time, 535);
             }else {
                 presstime = 0;
-                gtk_fixed_move(GTK_FIXED(fix), payment_hover.image, selections ? 600 : 0, 750);
-                rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
+                gtk_fixed_move(GTK_FIXED(fix), payment_hover, selections ? 600 : 0, 750);
+                rescaleImage(payment_hover, payment_hover_buffer, 1, 535);
             }
         }else {
             selections = 2;
             if(selections != lastSelections)
-                rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
+                rescaleImage(payment_hover, payment_hover_buffer, 1, 535);
             presstime = 0;
         }
 
@@ -651,14 +644,14 @@ static gboolean paymentAnimation(gpointer fix)
             printf("select payment %d\n", selectData.selectPayment);
             printf("Go to page 4\n");
             loaded = 0;
-            rescaleImage(payment_hover.image, payment_hover_buffer, 1, 535);
-            cleanOpacity(&payment_qrcode);
-            cleanOpacity(&payment_card);
+            rescaleImage(payment_hover, payment_hover_buffer, 1, 535);
+            cleanOpacity(payment_qrcode);
+            cleanOpacity(payment_card);
             return FALSE;
         }
 
-        opacityAnimation(&payment_qrcode, selections == 0);
-        opacityAnimation(&payment_card, selections == 1);
+        opacityAnimation(payment_qrcode, selections == 0);
+        opacityAnimation(payment_card, selections == 1);
 
         lastSelections = selections;
     }
@@ -739,11 +732,11 @@ static gboolean confirmAnimation(gpointer fix)
             changedPayment = 1;
             successTime = 0;
             loaded = 0;
-            cleanOpacity(&confirm_home_button);
+            cleanOpacity(confirm_home_button);
             return FALSE;
         }
 
-        opacityAnimation(&confirm_home_button, status == 21 || status == 22);
+        opacityAnimation(confirm_home_button, status == 21 || status == 22);
     }
     
 
@@ -781,7 +774,7 @@ static gboolean confirmAnimation(gpointer fix)
             parkingData[selectData.selectBlockNum].deadline = mktime(p);
         }
 
-        gtk_widget_hide(confirm_home_button.image);
+        gtk_widget_hide(confirm_home_button);
         gtk_widget_hide(confirm_park_label);
         gtk_widget_hide(confirm_pay_label);
         gtk_widget_hide(confirm_time_label);
