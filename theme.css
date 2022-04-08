@@ -1,0 +1,61 @@
+label#time_label {
+    color: #16D2BA;
+    font-size: 80px;
+    font-weight: bold;
+}
+
+label#home_clock {
+    font-size: 38px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+label#time_clock {
+    font-size: 38px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+label#payment_clock {
+    font-size: 38px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+label#time_space_label {
+    font-size: 75px;
+    color: #656565;
+    font-weight: bold;
+}
+
+label#time_payment_label {
+    font-size: 75px;
+    color: #FB3939;
+    font-weight: bold;
+}
+
+label#confirm_card_num {
+    font-size: 38px;
+    color: #4A4A4A;
+}
+
+label#select_parking_space_label {
+    font-size: 80px;
+    color: #313131;
+}
+
+label#confirm_black {
+    font-size: 75px;
+    color: #313131;
+}
+
+label#confirm_red {
+    font-size: 75px;
+    color: #EF2710;
+}
+
+label#inch10clock {
+    font-size: 50px;
+    color: #FCFCFB;
+    font-weight: bold;
+}
