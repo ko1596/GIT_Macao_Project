@@ -11,7 +11,7 @@
 
 #define PATH(k) STR(IDENT(Dir)IDENT(k)IDENT(File))
  
-#define Dir image/    \
+#define Dir /home/root/smart_city/image/    \
 
 #define Dir2 /home/root/grids/disp_patterns/disp_mo/    \
 
